@@ -1,4 +1,4 @@
-// Updated constants.ts - Conference-focused channels
+// Updated constants.ts - Extended Conference Organizations
 
 import { ChannelConfig, YouTubeVideo, ScheduleDay } from './types';
 
@@ -34,7 +34,7 @@ export const TANA_PLAYLIST: YouTubeVideo[] = [
   {
     id: 'tana-business-summit',
     title: 'TANA Business & Entrepreneurs Summit',
-    description: 'Business networking and entrepreneurship discussions',
+    description: 'Business networking and entrepreneurship discussions with Telugu business leaders',
     youtubeId: 'Izd-SLokbPY',
     duration: '2:15:20',
     category: 'Business',
@@ -65,7 +65,7 @@ export const NATS_PLAYLIST: YouTubeVideo[] = [
   {
     id: 'nats-community-awards',
     title: 'NATS Community Excellence Awards',
-    description: 'Recognizing outstanding contributions to Telugu community',
+    description: 'Recognizing outstanding contributions to Telugu community development',
     youtubeId: 'tq6kVYunCTk',
     duration: '1:45:30',
     category: 'Awards',
@@ -73,8 +73,8 @@ export const NATS_PLAYLIST: YouTubeVideo[] = [
   }
 ];
 
-// Political Events Playlist
-export const POLITICAL_PLAYLIST: YouTubeVideo[] = [
+// Telangana Association Playlist
+export const TELANGANA_PLAYLIST: YouTubeVideo[] = [
   {
     id: 'ktr-dallas',
     title: 'KTR in Dallas - Community Meet',
@@ -86,16 +86,136 @@ export const POLITICAL_PLAYLIST: YouTubeVideo[] = [
   },
   {
     id: 'telangana-diaspora-meet',
-    title: 'Telangana Diaspora Leadership Meet',
+    title: 'Telangana Diaspora Leadership Summit',
     description: 'Global Telugu leadership summit and policy discussions',
     youtubeId: 'wf8tDgoCuX4',
     duration: '1:50:45',
     category: 'Political',
     scheduledTime: '17:30'
+  },
+  {
+    id: 'telangana-formation-day',
+    title: 'Telangana Formation Day Celebrations',
+    description: 'Celebrating Telangana statehood with cultural programs and community events',
+    youtubeId: 'UTArkqpGGCw',
+    duration: '2:30:00',
+    category: 'Cultural',
+    scheduledTime: '18:00'
   }
 ];
 
-// Entertainment Events Playlist
+// American Telugu Association Playlist
+export const ATA_PLAYLIST: YouTubeVideo[] = [
+  {
+    id: 'ata-annual-convention',
+    title: 'ATA Annual Convention Highlights',
+    description: 'American Telugu Association annual convention with cultural and social programs',
+    youtubeId: 'kS9L0lz0EWM',
+    duration: '2:00:45',
+    category: 'Convention',
+    scheduledTime: '16:00'
+  },
+  {
+    id: 'ata-youth-leadership',
+    title: 'ATA Youth Leadership Program',
+    description: 'Empowering next generation Telugu-American leaders',
+    youtubeId: 'InVguI9nIW4',
+    duration: '1:25:30',
+    category: 'Youth Event',
+    scheduledTime: '14:30'
+  },
+  {
+    id: 'ata-community-service',
+    title: 'ATA Community Service Awards',
+    description: 'Recognizing outstanding community service by Telugu Americans',
+    youtubeId: 'tq6kVYunCTk',
+    duration: '1:40:15',
+    category: 'Awards',
+    scheduledTime: '19:30'
+  }
+];
+
+// AAA (Association of Andhra Americans) Playlist
+export const AAA_PLAYLIST: YouTubeVideo[] = [
+  {
+    id: 'aaa-medical-conference',
+    title: 'AAA Medical Professionals Conference',
+    description: 'Association of Andhra Americans medical professionals summit',
+    youtubeId: '3erbr7GN3UI',
+    duration: '2:20:30',
+    category: 'Professional',
+    scheduledTime: '10:30'
+  },
+  {
+    id: 'aaa-educational-summit',
+    title: 'AAA Educational Excellence Summit',
+    description: 'Focus on education and academic achievements in Telugu community',
+    youtubeId: '-A_xRPsKSWg',
+    duration: '1:55:45',
+    category: 'Education',
+    scheduledTime: '13:00'
+  },
+  {
+    id: 'aaa-cultural-night',
+    title: 'AAA Cultural Night Extravaganza',
+    description: 'Grand cultural performances celebrating Andhra heritage',
+    youtubeId: 'InVguI9nIW4',
+    duration: '3:10:20',
+    category: 'Cultural',
+    scheduledTime: '19:00'
+  }
+];
+
+// Mahaa ICON Exclusive Interviews Playlist
+export const MAHAA_ICON_PLAYLIST: YouTubeVideo[] = [
+  {
+    id: 'mahaa-icon-awards-main',
+    title: 'Mahaa ICON Awards 2025 - Complete Ceremony',
+    description: 'Celebrating excellence in Telugu entertainment and community service',
+    youtubeId: 'tq6kVYunCTk',
+    duration: '3:20:15',
+    category: 'Awards Ceremony',
+    scheduledTime: '19:30'
+  },
+  {
+    id: 'rana-daggubati-exclusive',
+    title: 'Rana Daggubati - Exclusive Interview',
+    description: 'Popular Telugu actor Rana Daggubati in exclusive interview about his journey',
+    youtubeId: '-A_xRPsKSWg',
+    duration: '1:20:45',
+    category: 'Celebrity Interview',
+    scheduledTime: '21:00'
+  },
+  {
+    id: 'manchu-vishnu-kannappa',
+    title: 'Manchu Vishnu - Kannappa Movie Special',
+    description: 'Actor Manchu Vishnu discusses his upcoming mythological film Kannappa',
+    youtubeId: '3erbr7GN3UI',
+    duration: '1:45:30',
+    category: 'Movie Promotion',
+    scheduledTime: '16:00'
+  },
+  {
+    id: 'miss-telugu-usa-winner',
+    title: 'Miss Telugu USA 2025 - Winner Interview',
+    description: 'Exclusive interview with Miss Telugu USA 2025 winner about her journey',
+    youtubeId: 'InVguI9nIW4',
+    duration: '45:20',
+    category: 'Beauty Pageant',
+    scheduledTime: '20:15'
+  },
+  {
+    id: 'telugu-entrepreneurs-special',
+    title: 'Telugu Entrepreneurs in America - Success Stories',
+    description: 'Inspiring stories of successful Telugu business leaders in America',
+    youtubeId: 'wf8tDgoCuX4',
+    duration: '2:10:30',
+    category: 'Business Interview',
+    scheduledTime: '15:30'
+  }
+];
+
+// Entertainment Events Playlist (Updated)
 export const ENTERTAINMENT_PLAYLIST: YouTubeVideo[] = [
   {
     id: 'miss-telugu-usa-2025',
@@ -107,53 +227,31 @@ export const ENTERTAINMENT_PLAYLIST: YouTubeVideo[] = [
     scheduledTime: '19:00'
   },
   {
-    id: 'kannappa-manchu-vishnu',
-    title: 'Kannappa Movie Promotion - Manchu Vishnu',
-    description: 'Actor Manchu Vishnu promotes his upcoming mythological film Kannappa',
+    id: 'tollywood-night-usa',
+    title: 'Tollywood Night in USA',
+    description: 'Star-studded evening with Telugu cinema celebrities',
     youtubeId: '3erbr7GN3UI',
-    duration: '1:45:30',
+    duration: '3:15:45',
     category: 'Entertainment',
-    scheduledTime: '16:00'
+    scheduledTime: '20:00'
   },
   {
-    id: 'rana-daggubati-loca-loka',
-    title: 'Rana Daggubati Exclusive Interview',
-    description: 'Popular Telugu actor Rana Daggubati in exclusive interview and interaction',
+    id: 'telugu-music-festival',
+    title: 'Telugu Music Festival - USA',
+    description: 'Celebrating Telugu music with renowned artists and singers',
+    youtubeId: 'kS9L0lz0EWM',
+    duration: '2:45:30',
+    category: 'Music Festival',
+    scheduledTime: '18:30'
+  },
+  {
+    id: 'comedy-night-telugu',
+    title: 'Telugu Comedy Night Special',
+    description: 'Hilarious comedy performances by Telugu comedians',
     youtubeId: '-A_xRPsKSWg',
-    duration: '1:20:45',
-    category: 'Interview',
-    scheduledTime: '21:00'
-  },
-  {
-    id: 'mahaa-icon-awards',
-    title: 'Mahaa ICON Awards Ceremony',
-    description: 'Annual awards recognizing excellence in Telugu cinema and arts',
-    youtubeId: 'tq6kVYunCTk',
-    duration: '3:20:15',
-    category: 'Awards',
-    scheduledTime: '20:30'
-  }
-];
-
-// Awards & Recognition Playlist
-export const AWARDS_PLAYLIST: YouTubeVideo[] = [
-  {
-    id: 'mahaa-icon-main',
-    title: 'Mahaa ICON Awards 2025',
-    description: 'Celebrating excellence in Telugu entertainment and community service',
-    youtubeId: 'tq6kVYunCTk',
-    duration: '3:20:15',
-    category: 'Awards',
-    scheduledTime: '19:30'
-  },
-  {
-    id: 'community-excellence-awards',
-    title: 'Telugu Community Excellence Awards',
-    description: 'Honoring outstanding achievements in North American Telugu community',
-    youtubeId: 'InVguI9nIW4',
-    duration: '2:10:30',
-    category: 'Awards',
-    scheduledTime: '18:00'
+    duration: '1:35:20',
+    category: 'Comedy',
+    scheduledTime: '21:30'
   }
 ];
 
@@ -161,7 +259,7 @@ export const AWARDS_PLAYLIST: YouTubeVideo[] = [
 export const CONFERENCES: ChannelConfig[] = [
   {
     id: 'tana-conference',
-    name: 'TANA Conference',
+    name: 'TANA',
     description: 'Telugu Association of North America',
     color: 'blue',
     bgGradient: 'from-blue-600 to-blue-800',
@@ -172,7 +270,7 @@ export const CONFERENCES: ChannelConfig[] = [
   },
   {
     id: 'nats-conference',
-    name: 'NATS Conference',
+    name: 'NATS',
     description: 'North American Telugu Society',
     color: 'green',
     bgGradient: 'from-green-600 to-green-800',
@@ -182,37 +280,59 @@ export const CONFERENCES: ChannelConfig[] = [
     youtubePlaylist: NATS_PLAYLIST
   },
   {
-    id: 'political-events',
-    name: 'Political Events',
-    description: 'Political Discussions & Meetings',
-    color: 'red',
-    bgGradient: 'from-red-600 to-red-800',
+    id: 'telangana-association',
+    name: 'Telangana Association',
+    description: 'My Telangana - US Chapter',
+    color: 'pink',
+    bgGradient: 'from-pink-600 to-pink-800',
     icon: '🏛️',
     isYoutube: true,
     youtubeVideoId: 'wf8tDgoCuX4',
-    youtubePlaylist: POLITICAL_PLAYLIST
+    youtubePlaylist: TELANGANA_PLAYLIST
+  },
+  {
+    id: 'ata-association',
+    name: 'ATA',
+    description: 'American Telugu Association',
+    color: 'indigo',
+    bgGradient: 'from-indigo-600 to-indigo-800',
+    icon: '🇺🇸',
+    isYoutube: true,
+    youtubeVideoId: 'kS9L0lz0EWM',
+    youtubePlaylist: ATA_PLAYLIST
+  },
+  {
+    id: 'aaa-association',
+    name: 'AAA',
+    description: 'Association of Andhra Americans',
+    color: 'teal',
+    bgGradient: 'from-teal-600 to-teal-800',
+    icon: '🎓',
+    isYoutube: true,
+    youtubeVideoId: '3erbr7GN3UI',
+    youtubePlaylist: AAA_PLAYLIST
+  },
+  {
+    id: 'mahaa-icon-exclusive',
+    name: 'Mahaa ICON Exclusive',
+    description: 'Exclusive Interviews & Special Content',
+    color: 'amber',
+    bgGradient: 'from-amber-600 to-amber-800',
+    icon: '⭐',
+    isYoutube: true,
+    youtubeVideoId: 'tq6kVYunCTk',
+    youtubePlaylist: MAHAA_ICON_PLAYLIST
   },
   {
     id: 'entertainment-events',
     name: 'Entertainment',
-    description: 'Movies, Interviews & Shows',
+    description: 'Movies, Music & Cultural Shows',
     color: 'purple',
     bgGradient: 'from-purple-600 to-purple-800',
     icon: '🎬',
     isYoutube: true,
     youtubeVideoId: 'InVguI9nIW4',
     youtubePlaylist: ENTERTAINMENT_PLAYLIST
-  },
-  {
-    id: 'awards-ceremonies',
-    name: 'Awards & Recognition',
-    description: 'Award Ceremonies & Recognition Events',
-    color: 'yellow',
-    bgGradient: 'from-yellow-600 to-yellow-800',
-    icon: '🏆',
-    isYoutube: true,
-    youtubeVideoId: 'tq6kVYunCTk',
-    youtubePlaylist: AWARDS_PLAYLIST
   }
 ];
 

@@ -23,7 +23,41 @@ export default function ConferenceCarousel({ conferences, onConferenceSelect }: 
   const [isHovered, setIsHovered] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Auto-play functionality
+  // Preview carousel state
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const [isPreviewAutoPlaying, setIsPreviewAutoPlaying] = useState(true);
+  const [isPreviewHovered, setIsPreviewHovered] = useState(false);
+  const previewIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // CTA carousel state
+  const [ctaIndex, setCtaIndex] = useState(0);
+  const [isCtaAutoPlaying, setIsCtaAutoPlaying] = useState(true);
+  const [isCtaHovered, setIsCtaHovered] = useState(false);
+  const ctaIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Calculate items per view for different screen sizes
+  const getItemsPerView = () => {
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth >= 1024) return 5; // lg
+      if (window.innerWidth >= 768) return 3;  // md
+      return 2; // sm
+    }
+    return 5;
+  };
+
+  const [itemsPerView, setItemsPerView] = useState(5);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setItemsPerView(getItemsPerView());
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Main carousel auto-play functionality
   useEffect(() => {
     if (isAutoPlaying && !isHovered) {
       intervalRef.current = setInterval(() => {
@@ -37,6 +71,39 @@ export default function ConferenceCarousel({ conferences, onConferenceSelect }: 
       }
     };
   }, [isAutoPlaying, isHovered, conferences.length]);
+
+  // Preview carousel auto-play functionality
+  useEffect(() => {
+    if (isPreviewAutoPlaying && !isPreviewHovered) {
+      previewIntervalRef.current = setInterval(() => {
+        setPreviewIndex((prev) => {
+          const maxIndex = Math.max(0, conferences.length - itemsPerView);
+          return prev >= maxIndex ? 0 : prev + 1;
+        });
+      }, 3000);
+    }
+
+    return () => {
+      if (previewIntervalRef.current) {
+        clearInterval(previewIntervalRef.current);
+      }
+    };
+  }, [isPreviewAutoPlaying, isPreviewHovered, conferences.length, itemsPerView]);
+
+  // CTA carousel auto-play functionality
+  useEffect(() => {
+    if (isCtaAutoPlaying && !isCtaHovered) {
+      ctaIntervalRef.current = setInterval(() => {
+        setCtaIndex((prev) => (prev + 1) % conferences.length);
+      }, 4000);
+    }
+
+    return () => {
+      if (ctaIntervalRef.current) {
+        clearInterval(ctaIntervalRef.current);
+      }
+    };
+  }, [isCtaAutoPlaying, isCtaHovered, conferences.length]);
 
   // Touch handlers for mobile swipe
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -80,6 +147,38 @@ export default function ConferenceCarousel({ conferences, onConferenceSelect }: 
     setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
+  // Preview carousel navigation
+  const nextPreviewSlide = () => {
+    setIsPreviewAutoPlaying(false);
+    setPreviewIndex((prev) => {
+      const maxIndex = Math.max(0, conferences.length - itemsPerView);
+      return prev >= maxIndex ? 0 : prev + 1;
+    });
+    setTimeout(() => setIsPreviewAutoPlaying(true), 10000);
+  };
+
+  const prevPreviewSlide = () => {
+    setIsPreviewAutoPlaying(false);
+    setPreviewIndex((prev) => {
+      const maxIndex = Math.max(0, conferences.length - itemsPerView);
+      return prev <= 0 ? maxIndex : prev - 1;
+    });
+    setTimeout(() => setIsPreviewAutoPlaying(true), 10000);
+  };
+
+  // CTA carousel navigation
+  const nextCtaSlide = () => {
+    setIsCtaAutoPlaying(false);
+    setCtaIndex((prev) => (prev + 1) % conferences.length);
+    setTimeout(() => setIsCtaAutoPlaying(true), 10000);
+  };
+
+  const prevCtaSlide = () => {
+    setIsCtaAutoPlaying(false);
+    setCtaIndex((prev) => (prev - 1 + conferences.length) % conferences.length);
+    setTimeout(() => setIsCtaAutoPlaying(true), 10000);
+  };
+
   // Get conference images mapping
   const getConferenceImage = (conferenceId: string) => {
     const imageMap = {
@@ -105,6 +204,7 @@ export default function ConferenceCarousel({ conferences, onConferenceSelect }: 
   };
 
   const currentConference = conferences[currentIndex];
+  const currentCtaConference = conferences[ctaIndex];
 
   return (
     <div className="w-full max-w-6xl mx-auto mb-12">
@@ -272,56 +372,239 @@ export default function ConferenceCarousel({ conferences, onConferenceSelect }: 
         ))}
       </div>
 
-      {/* Conference Cards Preview */}
-      <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {conferences.map((conference, index) => (
-          <button
-            key={conference.id}
-            onClick={() => {
-              goToSlide(index);
-            }}
-            className={`${theme.card} rounded-xl p-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg border-2 group ${
-              index === currentIndex 
-                ? `border-opacity-100 shadow-lg` 
-                : 'border-transparent hover:border-gray-300'
-            }`}
-            style={{
-              borderColor: index === currentIndex ? conference.color === 'blue' ? '#3b82f6' : 
-                           conference.color === 'green' ? '#10b981' :
-                           conference.color === 'red' ? '#ef4444' :
-                           conference.color === 'purple' ? '#8b5cf6' :
-                           conference.color === 'yellow' ? '#f59e0b' : '#6b7280' : 'transparent'
+      {/* Conference Cards Preview Carousel */}
+      <div className="mt-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className={`text-xl md:text-2xl font-bold ${theme.title}`}>
+            Quick Browse
+          </h3>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setIsPreviewAutoPlaying(!isPreviewAutoPlaying)}
+              className={`${theme.card} p-2 rounded-lg transition-all duration-300 hover:scale-105`}
+              aria-label={isPreviewAutoPlaying ? "Pause preview autoplay" : "Resume preview autoplay"}
+            >
+              {isPreviewAutoPlaying ? (
+                <div className="w-4 h-4 flex items-center justify-center">
+                  <div className="w-1 h-3 bg-current mr-0.5"></div>
+                  <div className="w-1 h-3 bg-current"></div>
+                </div>
+              ) : (
+                <Play className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div 
+          className="relative overflow-hidden"
+          onMouseEnter={() => setIsPreviewHovered(true)}
+          onMouseLeave={() => setIsPreviewHovered(false)}
+        >
+          <div 
+            className="flex transition-transform duration-500 ease-in-out gap-4"
+            style={{ 
+              transform: `translateX(-${previewIndex * (100 / itemsPerView)}%)`,
+              width: `${(conferences.length / itemsPerView) * 100}%`
             }}
           >
-            <div className="text-center">
-              <div className="text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">
-                {conference.icon}
-              </div>
-              <h4 className={`${theme.title} font-semibold text-sm mb-1 line-clamp-2`}>
-                {conference.name}
-              </h4>
-              <p className={`${theme.description} text-xs mb-2`}>
-                {conference.youtubePlaylist?.length || 0} videos
-              </p>
-              <div className="flex items-center justify-center space-x-1">
-                <Youtube className="w-3 h-3 text-red-500" />
-                <Clock className="w-3 h-3 text-gray-400" />
-              </div>
-            </div>
+            {conferences.map((conference, index) => (
+              <button
+                key={conference.id}
+                onClick={() => {
+                  goToSlide(index);
+                }}
+                className={`${theme.card} rounded-xl p-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg border-2 group flex-shrink-0`}
+                style={{
+                  width: `${100 / conferences.length}%`,
+                  borderColor: index === currentIndex ? 
+                    conference.color === 'blue' ? '#3b82f6' : 
+                    conference.color === 'green' ? '#10b981' :
+                    conference.color === 'red' ? '#ef4444' :
+                    conference.color === 'purple' ? '#8b5cf6' :
+                    conference.color === 'yellow' ? '#f59e0b' : '#6b7280' : 'transparent'
+                }}
+              >
+                <div className="text-center">
+                  <div className="text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">
+                    {conference.icon}
+                  </div>
+                  <h4 className={`${theme.title} font-semibold text-sm mb-1 line-clamp-2`}>
+                    {conference.name}
+                  </h4>
+                  <p className={`${theme.description} text-xs mb-2`}>
+                    {conference.youtubePlaylist?.length || 0} videos
+                  </p>
+                  <div className="flex items-center justify-center space-x-1">
+                    <Youtube className="w-3 h-3 text-red-500" />
+                    <Clock className="w-3 h-3 text-gray-400" />
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Preview Navigation Arrows */}
+          <button
+            onClick={prevPreviewSlide}
+            className={`absolute left-0 top-1/2 transform -translate-y-1/2 ${theme.card} hover:shadow-lg p-2 rounded-full transition-all duration-300 hover:scale-110 z-10 -ml-2`}
+            aria-label="Previous preview items"
+          >
+            <ChevronLeft className="w-4 h-4" />
           </button>
-        ))}
+          
+          <button
+            onClick={nextPreviewSlide}
+            className={`absolute right-0 top-1/2 transform -translate-y-1/2 ${theme.card} hover:shadow-lg p-2 rounded-full transition-all duration-300 hover:scale-110 z-10 -mr-2`}
+            aria-label="Next preview items"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Preview Progress Indicators */}
+        <div className="flex justify-center mt-4 space-x-2">
+          {Array.from({ length: Math.max(1, conferences.length - itemsPerView + 1) }).map((_, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                setIsPreviewAutoPlaying(false);
+                setPreviewIndex(index);
+                setTimeout(() => setIsPreviewAutoPlaying(true), 10000);
+              }}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === previewIndex
+                  ? 'bg-blue-500 scale-125'
+                  : 'bg-gray-300 hover:bg-gray-400'
+              }`}
+              aria-label={`Go to preview page ${index + 1}`}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Call to Action */}
-      <div className="mt-8 text-center">
-        <button
-          onClick={() => onConferenceSelect(currentConference)}
-          className={`bg-gradient-to-r ${currentConference.bgGradient} hover:opacity-90 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl inline-flex items-center space-x-3`}
+      {/* Call to Action Carousel */}
+      <div className="mt-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className={`text-xl md:text-2xl font-bold ${theme.title}`}>
+            Featured Event
+          </h3>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setIsCtaAutoPlaying(!isCtaAutoPlaying)}
+              className={`${theme.card} p-2 rounded-lg transition-all duration-300 hover:scale-105`}
+              aria-label={isCtaAutoPlaying ? "Pause CTA autoplay" : "Resume CTA autoplay"}
+            >
+              {isCtaAutoPlaying ? (
+                <div className="w-4 h-4 flex items-center justify-center">
+                  <div className="w-1 h-3 bg-current mr-0.5"></div>
+                  <div className="w-1 h-3 bg-current"></div>
+                </div>
+              ) : (
+                <Play className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div 
+          className="relative overflow-hidden rounded-xl"
+          onMouseEnter={() => setIsCtaHovered(true)}
+          onMouseLeave={() => setIsCtaHovered(false)}
         >
-          <Play className="w-6 h-6" />
-          <span>Explore {currentConference.name}</span>
-          <Calendar className="w-6 h-6" />
-        </button>
+          <div 
+            className="flex transition-transform duration-500 ease-in-out"
+            style={{ transform: `translateX(-${ctaIndex * 100}%)` }}
+          >
+            {conferences.map((conference, index) => (
+              <div key={conference.id} className="w-full flex-shrink-0">
+                <div className={`${theme.card} rounded-xl p-6 md:p-8 text-center relative overflow-hidden`}>
+                  {/* Background Pattern */}
+                  <div className="absolute inset-0 opacity-5">
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-400"></div>
+                    <div className="absolute top-4 left-4 text-6xl opacity-20">
+                      {conference.icon}
+                    </div>
+                    <div className="absolute bottom-4 right-4 text-6xl opacity-20">
+                      {conference.icon}
+                    </div>
+                  </div>
+
+                  <div className="relative z-10">
+                    <div className="text-5xl md:text-6xl mb-4 animate-pulse">
+                      {conference.icon}
+                    </div>
+                    <h3 className={`text-2xl md:text-3xl font-bold ${theme.title} mb-3`}>
+                      Don't Miss {conference.name}
+                    </h3>
+                    <p className={`${theme.description} text-base md:text-lg mb-6 max-w-2xl mx-auto`}>
+                      {conference.description} - Experience the highlights and exclusive moments from this premier Telugu community event.
+                    </p>
+                    
+                    <div className="flex flex-wrap justify-center items-center gap-4 mb-6 text-sm">
+                      <div className="flex items-center space-x-2 bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full">
+                        <Youtube className="w-4 h-4 text-red-500" />
+                        <span className="text-red-600 dark:text-red-400 font-medium">
+                          {conference.youtubePlaylist?.length || 0} Exclusive Videos
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-green-600 dark:text-green-400 font-medium">Available Now</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => onConferenceSelect(conference)}
+                      className={`bg-gradient-to-r ${conference.bgGradient} hover:opacity-90 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl inline-flex items-center space-x-3`}
+                    >
+                      <Play className="w-6 h-6" />
+                      <span>Explore {conference.name}</span>
+                      <Calendar className="w-6 h-6" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA Navigation Arrows */}
+          <button
+            onClick={prevCtaSlide}
+            className={`absolute left-4 top-1/2 transform -translate-y-1/2 ${theme.card} hover:shadow-lg p-3 rounded-full transition-all duration-300 hover:scale-110 z-20`}
+            aria-label="Previous featured event"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          
+          <button
+            onClick={nextCtaSlide}
+            className={`absolute right-4 top-1/2 transform -translate-y-1/2 ${theme.card} hover:shadow-lg p-3 rounded-full transition-all duration-300 hover:scale-110 z-20`}
+            aria-label="Next featured event"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* CTA Indicators */}
+        <div className="flex justify-center mt-4 space-x-2">
+          {conferences.map((conference, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                setIsCtaAutoPlaying(false);
+                setCtaIndex(index);
+                setTimeout(() => setIsCtaAutoPlaying(true), 10000);
+              }}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                index === ctaIndex
+                  ? `bg-gradient-to-r ${conference.bgGradient} scale-125 shadow-lg`
+                  : 'bg-gray-400 hover:bg-gray-300'
+              }`}
+              aria-label={`Feature ${conference.name}`}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
