@@ -258,7 +258,7 @@ const TeluguOrganizationsPreview: React.FC = () => {
   const maxPreviewIndex = Math.max(0, organizations.length - itemsPerView)
 
   return (
-    <div className="max-w-6xl mx-auto bg-gradient-to-br from-slate-900 to-slate-800 p-8 rounded-2xl">
+    <div className="max-w-6xl mx-auto ">
       <div className="mt-8">
         <div className="flex items-center justify-between mb-6">
           <div>
