@@ -23,7 +23,7 @@ const sampleOrganizations: Organization[] = [
     events: 147, 
     type: 'organization',
     website: 'https://www.tana.org/',
-    logo: 'https://www.tana.org/assets/images/logo.png'
+    logo: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/TANA.png'
   },
   { 
     id: '2', 
@@ -41,7 +41,7 @@ const sampleOrganizations: Organization[] = [
     events: 89, 
     type: 'organization',
     website: 'https://mytelanganaus.org/',
-    logo: 'https://mytelanganaus.org/assets/images/logo.png'
+    logo: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/TTA2.png'
   },
   { 
     id: '4', 
@@ -50,7 +50,7 @@ const sampleOrganizations: Organization[] = [
     events: 134, 
     type: 'organization',
     website: 'https://americanteluguassociation.org/',
-    logo: 'https://americanteluguassociation.org/images/logo.png'
+    logo: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/ATA.webp'
   },
   { 
     id: '5', 
@@ -59,57 +59,45 @@ const sampleOrganizations: Organization[] = [
     events: 76, 
     type: 'organization',
     website: 'https://www.theaaa.org/Global/index',
-    logo: 'https://www.theaaa.org/images/logo.png'
+    logo: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/AndhraAmericanAssociation.png'
+  },
+    { 
+    id: '2', 
+    name: 'North America Telugu Society (NATS)', 
+    color: 'green', 
+    events: 203, 
+    type: 'organization',
+    website: 'https://www.natsworld.org/',
+    logo: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/NATS.png'
   },
   { 
-    id: '6', 
-    name: 'Telugu Literary & Cultural Association', 
-    color: 'cyan', 
-    events: 92, 
-    type: 'organization'
+    id: '3', 
+    name: 'Telangana American Telugu Association', 
+    color: 'purple', 
+    events: 89, 
+    type: 'organization',
+    website: 'https://mytelanganaus.org/',
+    logo: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/TTA.png'
   },
   { 
-    id: '7', 
-    name: 'North American Telugu Foundation', 
-    color: 'teal', 
-    events: 68, 
-    type: 'organization'
+    id: '4', 
+    name: 'American Telugu Association (ATA)', 
+    color: 'orange', 
+    events: 134, 
+    type: 'organization',
+    website: 'https://americanteluguassociation.org/',
+    logo: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/ATA.webp'
   },
   { 
-    id: '8', 
-    name: 'Telugu Youth Association', 
-    color: 'indigo', 
-    events: 45, 
-    type: 'organization'
+    id: '5', 
+    name: 'American Andhra Association (AAA)', 
+    color: 'red', 
+    events: 76, 
+    type: 'organization',
+    website: 'https://www.theaaa.org/Global/index',
+    logo: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/AndhraAmericanAssociation.png'
   },
-  { 
-    id: '9', 
-    name: 'Telugu Cultural Society', 
-    color: 'amber', 
-    events: 87, 
-    type: 'organization'
-  },
-  { 
-    id: '10', 
-    name: 'Telugu Professionals Network', 
-    color: 'rose', 
-    events: 156, 
-    type: 'organization'
-  },
-  { 
-    id: '11', 
-    name: 'Telugu Arts & Heritage Society', 
-    color: 'yellow', 
-    events: 54, 
-    type: 'organization'
-  },
-  { 
-    id: '12', 
-    name: 'Telugu Educational Foundation', 
-    color: 'forest', 
-    events: 78, 
-    type: 'organization'
-  },
+  
 ]
 
 // Component starts
