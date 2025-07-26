@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Mahaa Digital',
+  title: 'Mahaa News USA',
   description: 'Online Live TV Platform',
 }
 

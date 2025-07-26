@@ -12,8 +12,6 @@ interface State {
   type: string
 }
 
-
-
 const sampleStates: State[] = [
   { id: '1', name: 'Texas', color: 'red', events: 147, type: 'state' },
   { id: '2', name: 'California', color: 'blue', events: 203, type: 'state' },
@@ -50,10 +48,13 @@ const USStatesPreview: React.FC = () => {
         const res = await fetch('/api/states?limit=100')
         const data = await res.json()
         if (data && data.docs) {
+          setStates(data.docs.length > 0 ? data.docs : sampleStates)
+        } else {
           setStates(sampleStates)
         }
       } catch (error) {
         console.error('Error fetching states:', error)
+        setStates(sampleStates)
       } finally {
         setIsLoading(false)
       }
@@ -62,22 +63,39 @@ const USStatesPreview: React.FC = () => {
     fetchStates()
   }, [])
 
-  // Auto-play functionality
+  // Auto-play functionality for infinite loop
   useEffect(() => {
-    if (!isPreviewAutoPlaying || isPreviewHovered || states.length <= itemsPerView) return
+    if (!isPreviewAutoPlaying || isPreviewHovered || states.length === 0) return
 
     const interval = setInterval(() => {
-      setPreviewIndex((prev) => (prev >= Math.max(0, states.length - itemsPerView) ? 0 : prev + 1))
+      setPreviewIndex((prev) => prev + 1)
     }, 3000)
 
     return () => clearInterval(interval)
   }, [isPreviewAutoPlaying, isPreviewHovered, states.length])
 
   const goToSlide = (index: number): void => setCurrentIndex(index)
-  const nextPreviewSlide = (): void =>
-    setPreviewIndex((prev) => (prev >= Math.max(0, states.length - itemsPerView) ? 0 : prev + 1))
-  const prevPreviewSlide = (): void =>
-    setPreviewIndex((prev) => (prev <= 0 ? Math.max(0, states.length - itemsPerView) : prev - 1))
+  const nextPreviewSlide = (): void => setPreviewIndex((prev) => prev + 1)
+  const prevPreviewSlide = (): void => setPreviewIndex((prev) => prev - 1)
+
+  // Create infinite loop by duplicating states
+  const getVisibleStates = () => {
+    if (states.length === 0) return []
+    
+    // Create enough duplicates to ensure smooth infinite scrolling
+    const duplicateCount = Math.ceil(itemsPerView * 3 / states.length)
+    const duplicatedStates = Array(duplicateCount).fill(states).flat()
+    return duplicatedStates
+  }
+
+  const visibleStates = getVisibleStates()
+  
+  // Calculate the actual translate position for infinite loop
+  const getTranslateX = () => {
+    if (states.length === 0) return 0
+    const stateWidth = 100 / itemsPerView
+    return (previewIndex * stateWidth) % (states.length * stateWidth)
+  }
 
   const theme = {
     title: 'text-gray-800',
@@ -85,27 +103,7 @@ const USStatesPreview: React.FC = () => {
     card: 'bg-white shadow-md',
   }
 
-  const getBorderColor = (state: State, isSelected: boolean): string => {
-    if (!isSelected) return 'transparent'
-    const colorMap: Record<string, string> = {
-      blue: '#3b82f6',
-      red: '#ef4444',
-      green: '#10b981',
-      purple: '#8b5cf6',
-      yellow: '#f59e0b',
-      forest: '#228B22',
-      orange: '#FF8C00',
-      cyan: '#00CED1',
-      teal: '#008B8B',
-      indigo: '#4B0082',
-      amber: '#FFBF00',
-      rose: '#FF69B4',
-      gray: '#708090',
-    }
-    return colorMap[state.color] || '#6b7280'
-  }
-
-  // Dummy rendering function placeholder (your full SVG rendering function goes here)
+  // Dummy rendering function placeholder
   const renderStateLogo = (state: State, size: 'medium' | 'large' = 'medium'): JSX.Element => {
     return (
       <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-gray-300 to-gray-400 text-white text-lg font-bold">
@@ -149,18 +147,18 @@ const USStatesPreview: React.FC = () => {
           <div
             className="flex transition-transform duration-500 ease-in-out gap-4"
             style={{
-              transform: `translateX(-${previewIndex * (100 / itemsPerView)}%)`,
-              width: `${(states.length / itemsPerView) * 100}%`,
+              transform: `translateX(-${getTranslateX()}%)`,
             }}
           >
-            {states.map((state, index) => (
+            {visibleStates.map((state, index) => (
               <button
-                key={state.id}
-                onClick={() => goToSlide(index)}
-                className={`${theme.card} rounded-xl p-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg border-2 group flex-shrink-0`}
+                key={`${state.id}-${Math.floor(index / states.length)}`}
+                onClick={() => goToSlide(index % states.length)}
+                className={`${theme.card} rounded-xl p-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg group flex-shrink-0 ${
+                  (index % states.length) === currentIndex ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
+                }`}
                 style={{
-                  width: `${100 / states.length}%`,
-                  borderColor: getBorderColor(state, index === currentIndex),
+                  minWidth: `${100 / itemsPerView}%`,
                 }}
               >
                 <div className="text-center">
@@ -199,18 +197,19 @@ const USStatesPreview: React.FC = () => {
 
         {/* Pagination dots */}
         <div className="flex justify-center mt-4 space-x-2">
-          {Array.from({ length: Math.max(1, states.length - itemsPerView + 1) }).map((_, index) => (
+          {states.map((_, index) => (
             <button
               key={index}
               onClick={() => {
                 setIsPreviewAutoPlaying(false)
+                setCurrentIndex(index)
                 setPreviewIndex(index)
                 setTimeout(() => setIsPreviewAutoPlaying(true), 10000)
               }}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === previewIndex ? 'bg-blue-500 scale-125' : 'bg-gray-300 hover:bg-gray-400'
+                index === currentIndex ? 'bg-blue-500 scale-125' : 'bg-gray-300 hover:bg-gray-400'
               }`}
-              aria-label={`Go to preview page ${index + 1}`}
+              aria-label={`Go to ${states[index]?.name}`}
             />
           ))}
         </div>
@@ -218,5 +217,4 @@ const USStatesPreview: React.FC = () => {
     </div>
   )
 }
-
 export default USStatesPreview
