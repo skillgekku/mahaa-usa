@@ -408,7 +408,7 @@ export default function ConferenceCarousel({
                       {renderConferenceLogo(conference, 'xlarge')}
                     </div>
                     <h3 className={`text-2xl md:text-3xl font-bold ${theme.title} mb-3`}>
-                      Don't Miss {conference.name}
+                     
                     </h3>
                     <p
                       className={`${theme.description} text-base md:text-lg mb-6 max-w-2xl mx-auto`}

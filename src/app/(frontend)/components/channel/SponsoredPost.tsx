@@ -104,10 +104,9 @@ const USStatesPreview: React.FC = () => {
   }
 
   // Dummy rendering function placeholder
-  const renderStateLogo = (state: State, size: 'medium' | 'large' = 'medium'): JSX.Element => {
+  const renderStateLogo = (size: 'medium' | 'large' = 'medium'): JSX.Element => {
     return (
       <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-gray-300 to-gray-400 text-white text-lg font-bold">
-        {state.name[0]}
       </div>
     )
   }
