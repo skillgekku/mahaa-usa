@@ -1,121 +1,262 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect, JSX } from 'react'
-import { Play, ChevronLeft, ChevronRight, Clock, MapPin } from 'lucide-react'
+import React, { useState, useEffect, JSX } from "react";
+import { Play, ChevronLeft, ChevronRight, Clock, MapPin } from "lucide-react";
 
 // State interface matching Payload collection structure
 interface State {
-  id: string
-  name: string
-  color: string
-  events: number
-  type: string
-  image?: string
+  id: string;
+  name: string;
+  color: string;
+  events: number;
+  type: string;
+  image?: string;
 }
 
 const sampleStates: State[] = [
-  { id: '1', name: 'Texas', color: 'red', events: 147, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Texas.jpg' },
-  { id: '2', name: 'California', color: 'blue', events: 203, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/California.png' },
-  { id: '3', name: 'Michigan', color: 'purple', events: 89, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Michigan.png' },
-  { id: '4', name: 'Washington', color: 'green', events: 134, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Washington.png' },
-  { id: '5', name: 'Arizona', color: 'orange', events: 76, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Arizona.png' },
-  { id: '6', name: 'Florida', color: 'cyan', events: 192, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Florida.png' },
-  { id: '7', name: 'North Carolina', color: 'teal', events: 98, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/North%20Carolina.png' },
-  { id: '8', name: 'Illinois', color: 'indigo', events: 156, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Illinois.png' },
-  { id: '9', name: 'New Jersey', color: 'amber', events: 87, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/New%20Jersey.png' },
-  { id: '10', name: 'New York', color: 'rose', events: 234, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/New%20York.png' },
-  { id: '11', name: 'Kansas', color: 'yellow', events: 54, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Kansas.png' },
-  { id: '12', name: 'Georgia', color: 'forest', events: 112, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Georgia.png' },
-  { id: '13', name: 'Ohio', color: 'gray', events: 78, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Ohio.png' },
-  { id: '14', name: 'Pennsylvania', color: 'blue', events: 145, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Pennsylvania.png' },
-  { id: '15', name: 'Virginia', color: 'purple', events: 92, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Virginia.png' },
-  { id: '16', name: 'Colorado', color: 'green', events: 103, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Colorado.png' },
-]
+  {
+    id: "1",
+    name: "Texas",
+    color: "red",
+    events: 147,
+    type: "state",
+    image:
+      "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Texas.png",
+  },
+  {
+    id: "2",
+    name: "California",
+    color: "blue",
+    events: 203,
+    type: "state",
+    image:
+      "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/California.png",
+  },
+  {
+    id: "3",
+    name: "Michigan",
+    color: "purple",
+    events: 89,
+    type: "state",
+    image:
+      "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Michigan.png",
+  },
+  {
+    id: "4",
+    name: "Washington",
+    color: "green",
+    events: 134,
+    type: "state",
+    image:
+      "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Washington.png",
+  },
+  {
+    id: "5",
+    name: "Arizona",
+    color: "orange",
+    events: 76,
+    type: "state",
+    image:
+      "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Arizona.png",
+  },
+  {
+    id: "6",
+    name: "Florida",
+    color: "cyan",
+    events: 192,
+    type: "state",
+    image:
+      "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Florida.png",
+  },
+  {
+    id: "7",
+    name: "North Carolina",
+    color: "teal",
+    events: 98,
+    type: "state",
+    image:
+      "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/North%20Carolina.png",
+  },
+  {
+    id: "8",
+    name: "Illinois",
+    color: "indigo",
+    events: 156,
+    type: "state",
+    image:
+      "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Illinois.png",
+  },
+  {
+    id: "9",
+    name: "New Jersey",
+    color: "amber",
+    events: 87,
+    type: "state",
+    image:
+      "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/New%20Jersey.png",
+  },
+  {
+    id: "10",
+    name: "New York",
+    color: "rose",
+    events: 234,
+    type: "state",
+    image:
+      "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/New%20York.png",
+  },
+  {
+    id: "11",
+    name: "Kansas",
+    color: "yellow",
+    events: 54,
+    type: "state",
+    image:
+      "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Kansas.png",
+  },
+  {
+    id: "12",
+    name: "Georgia",
+    color: "forest",
+    events: 112,
+    type: "state",
+    image:
+      "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Georgia.png",
+  },
+  {
+    id: "13",
+    name: "Ohio",
+    color: "gray",
+    events: 78,
+    type: "state",
+    image:
+      "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Ohio.png",
+  },
+  {
+    id: "14",
+    name: "Pennsylvania",
+    color: "blue",
+    events: 145,
+    type: "state",
+    image:
+      "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Pennsylvania.png",
+  },
+  {
+    id: "15",
+    name: "Virginia",
+    color: "purple",
+    events: 92,
+    type: "state",
+    image:
+      "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Virginia.png",
+  },
+  {
+    id: "16",
+    name: "Others",
+    color: "green",
+    events: 103,
+    type: "state",
+    image:
+      "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Colorado.png",
+  },
+];
 
 // Component starts
 const USStatesPreview: React.FC = () => {
-  const [states, setStates] = useState<State[]>([])
-  const [currentIndex, setCurrentIndex] = useState<number>(0)
-  const [previewIndex, setPreviewIndex] = useState<number>(0)
-  const [isPreviewAutoPlaying, setIsPreviewAutoPlaying] = useState<boolean>(true)
-  const [isPreviewHovered, setIsPreviewHovered] = useState<boolean>(false)
-  const [isLoading, setIsLoading] = useState<boolean>(true)
-  const itemsPerView = 4
+  const [states, setStates] = useState<State[]>([]);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [previewIndex, setPreviewIndex] = useState<number>(0);
+  const [isPreviewAutoPlaying, setIsPreviewAutoPlaying] =
+    useState<boolean>(true);
+  const [isPreviewHovered, setIsPreviewHovered] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const itemsPerView = 4;
 
   // Fetch state data from Payload CMS API
   useEffect(() => {
     const fetchStates = async () => {
       try {
-        const res = await fetch('/api/states?limit=100')
-        const data = await res.json()
+        const res = await fetch("/api/states?limit=100");
+        const data = await res.json();
         if (data && data.docs) {
-          setStates(data.docs.length > 0 ? data.docs : sampleStates)
+          setStates(data.docs.length > 0 ? data.docs : sampleStates);
         } else {
-          setStates(sampleStates)
+          setStates(sampleStates);
         }
       } catch (error) {
-        console.error('Error fetching states:', error)
-        setStates(sampleStates)
+        console.error("Error fetching states:", error);
+        setStates(sampleStates);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchStates()
-  }, [])
+    fetchStates();
+  }, []);
 
   // Auto-play functionality for infinite loop
   useEffect(() => {
-    if (!isPreviewAutoPlaying || isPreviewHovered || states.length === 0) return
+    if (!isPreviewAutoPlaying || isPreviewHovered || states.length === 0)
+      return;
 
     const interval = setInterval(() => {
-      setPreviewIndex((prev) => prev + 1)
-    }, 3000)
+      setPreviewIndex((prev) => prev + 1);
+    }, 3000);
 
-    return () => clearInterval(interval)
-  }, [isPreviewAutoPlaying, isPreviewHovered, states.length])
+    return () => clearInterval(interval);
+  }, [isPreviewAutoPlaying, isPreviewHovered, states.length]);
 
-  const goToSlide = (index: number): void => setCurrentIndex(index)
-  const nextPreviewSlide = (): void => setPreviewIndex((prev) => prev + 1)
-  const prevPreviewSlide = (): void => setPreviewIndex((prev) => prev - 1)
+  const goToSlide = (index: number): void => setCurrentIndex(index);
+  const nextPreviewSlide = (): void => setPreviewIndex((prev) => prev + 1);
+  const prevPreviewSlide = (): void => setPreviewIndex((prev) => prev - 1);
 
   // Create infinite loop by duplicating states
   const getVisibleStates = () => {
-    if (states.length === 0) return []
-    
-    // Create enough duplicates to ensure smooth infinite scrolling
-    const duplicateCount = Math.ceil(itemsPerView * 3 / states.length)
-    const duplicatedStates = Array(duplicateCount).fill(states).flat()
-    return duplicatedStates
-  }
+    if (states.length === 0) return [];
 
-  const visibleStates = getVisibleStates()
-  
+    // Create enough duplicates to ensure smooth infinite scrolling
+    const duplicateCount = Math.ceil((itemsPerView * 3) / states.length);
+    const duplicatedStates = Array(duplicateCount).fill(states).flat();
+    return duplicatedStates;
+  };
+
+  const visibleStates = getVisibleStates();
+
   // Calculate the actual translate position for infinite loop
   const getTranslateX = () => {
-    if (states.length === 0) return 0
-    const stateWidth = 100 / itemsPerView
-    return (previewIndex * stateWidth) % (states.length * stateWidth)
-  }
+    if (states.length === 0) return 0;
+    const stateWidth = 100 / itemsPerView;
+    return (previewIndex * stateWidth) % (states.length * stateWidth);
+  };
 
   const theme = {
-    title: 'text-gray-800',
-    description: 'text-gray-600',
-    card: 'bg-white shadow-md',
-  }
+    title: "text-gray-800",
+    description: "text-gray-600",
+    card: "bg-white shadow-md",
+  };
 
   // Generate placeholder image URL
   const getPlaceholderImage = (state: State): string => {
-    const colors = ['FF6B6B', '4ECDC4', '45B7D1', 'FFA07A', '98D8C8', 'FDCB6E', 'E17055', '74B9FF', 'A29BFE', 'FD79A8']
-    const colorIndex = state.name.length % colors.length
-    const color = colors[colorIndex]
-    return `https://via.placeholder.com/400x250/${color}/FFFFFF?text=${encodeURIComponent(state.name)}`
-  }
+    const colors = [
+      "FF6B6B",
+      "4ECDC4",
+      "45B7D1",
+      "FFA07A",
+      "98D8C8",
+      "FDCB6E",
+      "E17055",
+      "74B9FF",
+      "A29BFE",
+      "FD79A8",
+    ];
+    const colorIndex = state.name.length % colors.length;
+    const color = colors[colorIndex];
+    return `https://via.placeholder.com/400x250/${color}/FFFFFF?text=${encodeURIComponent(state.name)}`;
+  };
 
   // Updated rendering function with placeholder image
   const renderStateImage = (state: State): JSX.Element => {
-    const imageUrl = state.image || getPlaceholderImage(state)
-    
+    const imageUrl = state.image || getPlaceholderImage(state);
+
     return (
       <div className="w-full h-32 mb-3 overflow-hidden rounded-lg bg-gray-100">
         <img
@@ -124,38 +265,48 @@ const USStatesPreview: React.FC = () => {
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           onError={(e) => {
             // Fallback to a colored div if image fails to load
-            const target = e.target as HTMLImageElement
-            target.style.display = 'none'
+            const target = e.target as HTMLImageElement;
+            target.style.display = "none";
             if (target.nextElementSibling) {
-              (target.nextElementSibling as HTMLElement).style.display = 'flex'
+              (target.nextElementSibling as HTMLElement).style.display = "flex";
             }
           }}
         />
-        <div 
+        <div
           className="w-full h-full hidden items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500 text-white font-bold text-2xl"
-          style={{ display: 'none' }}
+          style={{ display: "none" }}
         >
           {state.name.slice(0, 2).toUpperCase()}
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   if (isLoading) {
     return (
-      <div className="max-w-6xl mx-auto py-16 text-center text-gray-500">Loading states...</div>
-    )
+      <div className="max-w-6xl mx-auto py-16 text-center text-gray-500">
+        Loading states...
+      </div>
+    );
   }
 
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4">
-          <h3 className={`text-xl text-white md:text-2xl font-bold ${theme.title}`}>Happenings by State</h3>
+          <h3
+            className={`text-xl text-white md:text-2xl font-bold ${theme.title}`}
+          >
+            Happenings by State
+          </h3>
           <button
             onClick={() => setIsPreviewAutoPlaying(!isPreviewAutoPlaying)}
             className={`${theme.card} p-2 rounded-lg transition-all duration-300 hover:scale-105`}
-            aria-label={isPreviewAutoPlaying ? 'Pause preview autoplay' : 'Resume preview autoplay'}
+            aria-label={
+              isPreviewAutoPlaying
+                ? "Pause preview autoplay"
+                : "Resume preview autoplay"
+            }
           >
             {isPreviewAutoPlaying ? (
               <div className="w-4 h-4 flex items-center justify-center">
@@ -184,7 +335,9 @@ const USStatesPreview: React.FC = () => {
                 key={`${state.id}-${Math.floor(index / states.length)}`}
                 onClick={() => goToSlide(index % states.length)}
                 className={`${theme.card} rounded-xl p-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg group flex-shrink-0 ${
-                  (index % states.length) === currentIndex ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
+                  index % states.length === currentIndex
+                    ? "ring-2 ring-blue-500 ring-opacity-50"
+                    : ""
                 }`}
                 style={{
                   minWidth: `${100 / itemsPerView}%`,
@@ -192,10 +345,14 @@ const USStatesPreview: React.FC = () => {
               >
                 <div className="text-center">
                   {renderStateImage(state)}
-                  <h4 className={`${theme.title} font-semibold text-sm mb-1 line-clamp-2`}>
+                  <h4
+                    className={`${theme.title} font-semibold text-sm mb-1 line-clamp-2`}
+                  >
                     {state.name}
                   </h4>
-                  <p className={`${theme.description} text-xs mb-2`}>{state.events} events</p>
+                  <p className={`${theme.description} text-xs mb-2`}>
+                    {state.events} events
+                  </p>
                   <div className="flex items-center justify-center space-x-1">
                     <MapPin className="w-3 h-3 text-blue-500" />
                     <Clock className="w-3 h-3 text-gray-400" />
@@ -228,13 +385,15 @@ const USStatesPreview: React.FC = () => {
             <button
               key={index}
               onClick={() => {
-                setIsPreviewAutoPlaying(false)
-                setCurrentIndex(index)
-                setPreviewIndex(index)
-                setTimeout(() => setIsPreviewAutoPlaying(true), 10000)
+                setIsPreviewAutoPlaying(false);
+                setCurrentIndex(index);
+                setPreviewIndex(index);
+                setTimeout(() => setIsPreviewAutoPlaying(true), 10000);
               }}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === currentIndex ? 'bg-blue-500 scale-125' : 'bg-gray-300 hover:bg-gray-400'
+                index === currentIndex
+                  ? "bg-blue-500 scale-125"
+                  : "bg-gray-300 hover:bg-gray-400"
               }`}
               aria-label={`Go to ${states[index]?.name}`}
             />
@@ -242,6 +401,6 @@ const USStatesPreview: React.FC = () => {
         </div>
       </div>
     </div>
-  )
-}
-export default USStatesPreview
+  );
+};
+export default USStatesPreview;
