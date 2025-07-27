@@ -14,7 +14,7 @@ interface State {
 }
 
 const sampleStates: State[] = [
-  { id: '1', name: 'Texas', color: 'red', events: 147, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Texas.png' },
+  { id: '1', name: 'Texas', color: 'red', events: 147, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Texas.jpg' },
   { id: '2', name: 'California', color: 'blue', events: 203, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/California.png' },
   { id: '3', name: 'Michigan', color: 'purple', events: 89, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Michigan.png' },
   { id: '4', name: 'Washington', color: 'green', events: 134, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Washington.png' },
