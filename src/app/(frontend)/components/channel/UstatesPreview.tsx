@@ -10,25 +10,26 @@ interface State {
   color: string
   events: number
   type: string
+  image?: string
 }
 
 const sampleStates: State[] = [
-  { id: '1', name: 'Texas', color: 'red', events: 147, type: 'state' },
-  { id: '2', name: 'California', color: 'blue', events: 203, type: 'state' },
-  { id: '3', name: 'Michigan', color: 'purple', events: 89, type: 'state' },
-  { id: '4', name: 'Washington', color: 'green', events: 134, type: 'state' },
-  { id: '5', name: 'Arizona', color: 'orange', events: 76, type: 'state' },
-  { id: '6', name: 'Florida', color: 'cyan', events: 192, type: 'state' },
-  { id: '7', name: 'North Carolina', color: 'teal', events: 98, type: 'state' },
-  { id: '8', name: 'Illinois', color: 'indigo', events: 156, type: 'state' },
-  { id: '9', name: 'New Jersey', color: 'amber', events: 87, type: 'state' },
-  { id: '10', name: 'New York', color: 'rose', events: 234, type: 'state' },
-  { id: '11', name: 'Kansas', color: 'yellow', events: 54, type: 'state' },
-  { id: '12', name: 'Georgia', color: 'forest', events: 112, type: 'state' },
-  { id: '13', name: 'Ohio', color: 'gray', events: 78, type: 'state' },
-  { id: '14', name: 'Pennsylvania', color: 'blue', events: 145, type: 'state' },
-  { id: '15', name: 'Virginia', color: 'purple', events: 92, type: 'state' },
-  { id: '16', name: 'Colorado', color: 'green', events: 103, type: 'state' },
+  { id: '1', name: 'Texas', color: 'red', events: 147, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Texas.png' },
+  { id: '2', name: 'California', color: 'blue', events: 203, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/California.png' },
+  { id: '3', name: 'Michigan', color: 'purple', events: 89, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Michigan.png' },
+  { id: '4', name: 'Washington', color: 'green', events: 134, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Washington.png' },
+  { id: '5', name: 'Arizona', color: 'orange', events: 76, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Arizona.png' },
+  { id: '6', name: 'Florida', color: 'cyan', events: 192, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Florida.png' },
+  { id: '7', name: 'North Carolina', color: 'teal', events: 98, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/North%20Carolina.png' },
+  { id: '8', name: 'Illinois', color: 'indigo', events: 156, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Illinois.png' },
+  { id: '9', name: 'New Jersey', color: 'amber', events: 87, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/New%20Jersey.png' },
+  { id: '10', name: 'New York', color: 'rose', events: 234, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/New%20York.png' },
+  { id: '11', name: 'Kansas', color: 'yellow', events: 54, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Kansas.png' },
+  { id: '12', name: 'Georgia', color: 'forest', events: 112, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Georgia.png' },
+  { id: '13', name: 'Ohio', color: 'gray', events: 78, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Ohio.png' },
+  { id: '14', name: 'Pennsylvania', color: 'blue', events: 145, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Pennsylvania.png' },
+  { id: '15', name: 'Virginia', color: 'purple', events: 92, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Virginia.png' },
+  { id: '16', name: 'Colorado', color: 'green', events: 103, type: 'state', image: 'https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/states/Colorado.png' },
 ]
 
 // Component starts
@@ -103,11 +104,39 @@ const USStatesPreview: React.FC = () => {
     card: 'bg-white shadow-md',
   }
 
-  // Dummy rendering function placeholder
-  const renderStateLogo = (state: State, size: 'medium' | 'large' = 'medium'): JSX.Element => {
+  // Generate placeholder image URL
+  const getPlaceholderImage = (state: State): string => {
+    const colors = ['FF6B6B', '4ECDC4', '45B7D1', 'FFA07A', '98D8C8', 'FDCB6E', 'E17055', '74B9FF', 'A29BFE', 'FD79A8']
+    const colorIndex = state.name.length % colors.length
+    const color = colors[colorIndex]
+    return `https://via.placeholder.com/400x250/${color}/FFFFFF?text=${encodeURIComponent(state.name)}`
+  }
+
+  // Updated rendering function with placeholder image
+  const renderStateImage = (state: State): JSX.Element => {
+    const imageUrl = state.image || getPlaceholderImage(state)
+    
     return (
-      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-gray-300 to-gray-400 text-white text-lg font-bold">
-        {state.name[0]}
+      <div className="w-full h-32 mb-3 overflow-hidden rounded-lg bg-gray-100">
+        <img
+          src={imageUrl}
+          alt={`${state.name} placeholder`}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+          onError={(e) => {
+            // Fallback to a colored div if image fails to load
+            const target = e.target as HTMLImageElement
+            target.style.display = 'none'
+            if (target.nextElementSibling) {
+              (target.nextElementSibling as HTMLElement).style.display = 'flex'
+            }
+          }}
+        />
+        <div 
+          className="w-full h-full hidden items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500 text-white font-bold text-2xl"
+          style={{ display: 'none' }}
+        >
+          {state.name.slice(0, 2).toUpperCase()}
+        </div>
       </div>
     )
   }
@@ -162,9 +191,7 @@ const USStatesPreview: React.FC = () => {
                 }}
               >
                 <div className="text-center">
-                  <div className="mb-2 group-hover:scale-110 transition-transform duration-300 flex justify-center">
-                    {renderStateLogo(state, 'large')}
-                  </div>
+                  {renderStateImage(state)}
                   <h4 className={`${theme.title} font-semibold text-sm mb-1 line-clamp-2`}>
                     {state.name}
                   </h4>
