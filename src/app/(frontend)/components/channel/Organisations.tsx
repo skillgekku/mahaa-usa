@@ -334,9 +334,7 @@ const TeluguOrganizationsPreview: React.FC = () => {
                   <h4 className="text-white font-semibold text-sm mb-2 line-clamp-2 min-h-[2.5rem]">
                     {org.name}
                   </h4>
-                  <p className="text-slate-300 text-xs mb-3 font-medium">
-                    {org.events} events
-                  </p>
+
                   <div className="flex items-center justify-center space-x-2">
                     <div className="flex items-center space-x-1">
                       <MapPin className="w-3 h-3 text-blue-400" />
