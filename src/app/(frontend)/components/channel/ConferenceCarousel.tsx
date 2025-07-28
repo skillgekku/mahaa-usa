@@ -273,20 +273,7 @@ export default function ConferenceCarousel({
       </div>
 
       {/* Carousel Indicators */}
-      <div className="flex justify-center mt-6 space-x-2">
-        {conferences.map((conference, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              index === currentIndex
-                ? `bg-gradient-to-r ${conference.bgGradient} scale-125 shadow-lg`
-                : "bg-gray-400 hover:bg-gray-300"
-            }`}
-            aria-label={`Go to ${conference.name}`}
-          />
-        ))}
-      </div>
+     
 
       <Organisations></Organisations>
 

@@ -164,12 +164,14 @@ const sampleStates: State[] = [
 const USStatesPreview: React.FC = () => {
   const [states, setStates] = useState<State[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [previewIndex, setPreviewIndex] = useState<number>(0);
-  const [isPreviewAutoPlaying, setIsPreviewAutoPlaying] =
-    useState<boolean>(true);
-  const [isPreviewHovered, setIsPreviewHovered] = useState<boolean>(false);
+  const [translateX, setTranslateX] = useState<number>(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState<boolean>(true);
+  const [isHovered, setIsHovered] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isTransitioning, setIsTransitioning] = useState<boolean>(true);
+  
   const itemsPerView = 4;
+  const itemWidth = 5 / itemsPerView; // Percentage width per item
 
   // Fetch state data from Payload CMS API
   useEffect(() => {
@@ -193,39 +195,87 @@ const USStatesPreview: React.FC = () => {
     fetchStates();
   }, []);
 
-  // Auto-play functionality for infinite loop
+  // Create extended array for infinite scroll
+  const extendedStates = React.useMemo(() => {
+    if (states.length === 0) return [];
+    
+    // Create enough duplicates to ensure smooth infinite scrolling
+    const duplicateCount = Math.max(2, Math.ceil(itemsPerView / states.length));
+    const extended = [];
+    
+    for (let i = 0; i < duplicateCount; i++) {
+      extended.push(...states.map((state, index) => ({
+        ...state,
+        id: `${state.id}-${i}-${index}`, // Unique ID for React keys
+        originalIndex: index
+      })));
+    }
+    
+    return extended;
+  }, [states, itemsPerView]);
+
+  // Auto-play functionality with infinite loop
   useEffect(() => {
-    if (!isPreviewAutoPlaying || isPreviewHovered || states.length === 0)
-      return;
+    if (!isAutoPlaying || isHovered || states.length === 0) return;
 
     const interval = setInterval(() => {
-      setPreviewIndex((prev) => prev + 1);
-    }, 3000);
+      setTranslateX(prev => {
+        const newTranslateX = prev + itemWidth;
+        
+        // Reset position when we've scrolled through one complete set
+        if (newTranslateX >= states.length * itemWidth) {
+          // Temporarily disable transition for seamless reset
+          setIsTransitioning(false);
+          setTimeout(() => {
+            setTranslateX(0);
+            setTimeout(() => setIsTransitioning(true), 50);
+          }, 50);
+          return prev;
+        }
+        
+        return newTranslateX;
+      });
+    }, 500);
 
     return () => clearInterval(interval);
-  }, [isPreviewAutoPlaying, isPreviewHovered, states.length]);
+  }, [isAutoPlaying, isHovered, states.length, itemWidth]);
 
-  const goToSlide = (index: number): void => setCurrentIndex(index);
-  const nextPreviewSlide = (): void => setPreviewIndex((prev) => prev + 1);
-  const prevPreviewSlide = (): void => setPreviewIndex((prev) => prev - 1);
-
-  // Create infinite loop by duplicating states
-  const getVisibleStates = () => {
-    if (states.length === 0) return [];
-
-    // Create enough duplicates to ensure smooth infinite scrolling
-    const duplicateCount = Math.ceil((itemsPerView * 3) / states.length);
-    const duplicatedStates = Array(duplicateCount).fill(states).flat();
-    return duplicatedStates;
+  const goToSlide = (index: number): void => {
+    setCurrentIndex(index);
+    setTranslateX(index * itemWidth);
   };
 
-  const visibleStates = getVisibleStates();
+  const nextSlide = (): void => {
+    setTranslateX(prev => {
+      const newTranslateX = prev + itemWidth;
+      
+      if (newTranslateX >= states.length * itemWidth) {
+        setIsTransitioning(false);
+        setTimeout(() => {
+          setTranslateX(0);
+          setTimeout(() => setIsTransitioning(true), 50);
+        }, 300);
+        return prev;
+      }
+      
+      return newTranslateX;
+    });
+  };
 
-  // Calculate the actual translate position for infinite loop
-  const getTranslateX = () => {
-    if (states.length === 0) return 0;
-    const stateWidth = 100 / itemsPerView;
-    return (previewIndex * stateWidth) % (states.length * stateWidth);
+  const prevSlide = (): void => {
+    setTranslateX(prev => {
+      if (prev <= 0) {
+        const lastPosition = (states.length - itemsPerView) * itemWidth;
+        setIsTransitioning(false);
+        setTimeout(() => {
+          setTranslateX(lastPosition);
+          setTimeout(() => setIsTransitioning(true), 50);
+        }, 50);
+        return prev;
+      }
+      
+      return prev - itemWidth;
+    });
   };
 
   const theme = {
@@ -235,7 +285,7 @@ const USStatesPreview: React.FC = () => {
   };
 
   // Generate placeholder image URL
-  const getPlaceholderImage = (state: State): string => {
+  const getPlaceholderImage = (state: any): string => {
     const colors = [
       "FF6B6B",
       "4ECDC4",
@@ -254,7 +304,7 @@ const USStatesPreview: React.FC = () => {
   };
 
   // Updated rendering function with placeholder image
-  const renderStateImage = (state: State): JSX.Element => {
+  const renderStateImage = (state: any): JSX.Element => {
     const imageUrl = state.image || getPlaceholderImage(state);
 
     return (
@@ -291,72 +341,64 @@ const USStatesPreview: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-8 rounded-2xl">
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4">
-          <h3
-            className={`text-xl text-white md:text-2xl font-bold ${theme.title}`}
-          >
+          <h3 className="text-xl text-white md:text-2xl font-bold">
             Happenings by State
           </h3>
           <button
-            onClick={() => setIsPreviewAutoPlaying(!isPreviewAutoPlaying)}
-            className={`${theme.card} p-2 rounded-lg transition-all duration-300 hover:scale-105`}
+            onClick={() => setIsAutoPlaying(!isAutoPlaying)}
+            className="bg-white/10 backdrop-blur-sm border border-white/20 p-3 rounded-xl transition-all duration-300 hover:scale-105 hover:bg-white/20"
             aria-label={
-              isPreviewAutoPlaying
+              isAutoPlaying
                 ? "Pause preview autoplay"
                 : "Resume preview autoplay"
             }
           >
-            {isPreviewAutoPlaying ? (
-              <div className="w-4 h-4 flex items-center justify-center">
+            {isAutoPlaying ? (
+              <div className="w-4 h-4 flex items-center justify-center text-white">
                 <div className="w-1 h-3 bg-current mr-0.5"></div>
                 <div className="w-1 h-3 bg-current"></div>
               </div>
             ) : (
-              <Play className="w-4 h-4" />
+              <Play className="w-4 h-4 text-white" />
             )}
           </button>
         </div>
 
         <div
           className="relative overflow-hidden"
-          onMouseEnter={() => setIsPreviewHovered(true)}
-          onMouseLeave={() => setIsPreviewHovered(false)}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
           <div
-            className="flex transition-transform duration-500 ease-in-out gap-4"
+            className={`flex gap-4 ${isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
             style={{
-              transform: `translateX(-${getTranslateX()}%)`,
+              transform: `translateX(-${translateX}%)`,
+              width: `${(extendedStates.length / itemsPerView) * 100}%`,
             }}
           >
-            {visibleStates.map((state, index) => (
+            {extendedStates.map((state, index) => (
               <button
-                key={`${state.id}-${Math.floor(index / states.length)}`}
-                onClick={() => goToSlide(index % states.length)}
+                key={state.id}
+                onClick={() => goToSlide(state.originalIndex)}
                 className={`${theme.card} rounded-xl p-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg group flex-shrink-0 ${
-                  index % states.length === currentIndex
+                  state.originalIndex === currentIndex
                     ? "ring-2 ring-blue-500 ring-opacity-50"
                     : ""
                 }`}
                 style={{
-                  minWidth: `${100 / itemsPerView}%`,
+                  width: `${100 / extendedStates.length}%`,
                 }}
               >
                 <div className="text-center">
                   {renderStateImage(state)}
-                  <h4
-                    className={`${theme.title} font-semibold text-sm mb-1 line-clamp-2`}
-                  >
+                  <h4 className={`${theme.title} font-semibold text-sm mb-1 line-clamp-2`}>
                     {state.name}
                   </h4>
-                  <p className={`${theme.description} text-xs mb-2`}>
-                    {state.events} events
-                  </p>
-                  <div className="flex items-center justify-center space-x-1">
-                    <MapPin className="w-3 h-3 text-blue-500" />
-                    <Clock className="w-3 h-3 text-gray-400" />
-                  </div>
+                 
+                 
                 </div>
               </button>
             ))}
@@ -364,43 +406,45 @@ const USStatesPreview: React.FC = () => {
 
           {/* Navigation arrows */}
           <button
-            onClick={prevPreviewSlide}
-            className={`absolute left-0 top-1/2 transform -translate-y-1/2 ${theme.card} hover:shadow-lg p-2 rounded-full transition-all duration-300 hover:scale-110 z-10 -ml-2`}
+            onClick={prevSlide}
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 p-3 rounded-full transition-all duration-300 hover:scale-110 z-10 -ml-2"
             aria-label="Previous preview items"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-4 h-4 text-white" />
           </button>
           <button
-            onClick={nextPreviewSlide}
-            className={`absolute right-0 top-1/2 transform -translate-y-1/2 ${theme.card} hover:shadow-lg p-2 rounded-full transition-all duration-300 hover:scale-110 z-10 -mr-2`}
+            onClick={nextSlide}
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 p-3 rounded-full transition-all duration-300 hover:scale-110 z-10 -mr-2"
             aria-label="Next preview items"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4 text-white" />
           </button>
         </div>
 
-        {/* Pagination dots */}
-        <div className="flex justify-center mt-4 space-x-2">
-          {states.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => {
-                setIsPreviewAutoPlaying(false);
-                setCurrentIndex(index);
-                setPreviewIndex(index);
-                setTimeout(() => setIsPreviewAutoPlaying(true), 10000);
-              }}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === currentIndex
-                  ? "bg-blue-500 scale-125"
-                  : "bg-gray-300 hover:bg-gray-400"
-              }`}
-              aria-label={`Go to ${states[index]?.name}`}
-            />
-          ))}
-        </div>
+        {/* Pagination dots - only show if we have more than itemsPerView states */}
+        {states.length > itemsPerView && (
+          <div className="flex justify-center mt-4 space-x-2">
+            {Array.from({ length: Math.min(5, Math.ceil(states.length / itemsPerView)) }).map((_, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  setIsAutoPlaying(false);
+                  goToSlide(index * itemsPerView);
+                  setTimeout(() => setIsAutoPlaying(true), 10000);
+                }}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  Math.floor(currentIndex / itemsPerView) === index
+                    ? "bg-white scale-125 shadow-lg"
+                    : "bg-white/40 hover:bg-white/60"
+                }`}
+                aria-label={`Go to page ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 };
+
 export default USStatesPreview;

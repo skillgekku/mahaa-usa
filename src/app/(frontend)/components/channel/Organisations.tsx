@@ -56,7 +56,7 @@ const sampleOrganizations: Organization[] = [
     logo: "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/AndhraAmericanAssociation.png",
   },
   {
-    id: "3",
+    id: "6",
     name: "Miss Telugu USA",
     color: "purple",
     type: "organization",
@@ -64,29 +64,20 @@ const sampleOrganizations: Organization[] = [
     logo: "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/Miss%20Telugu%202.png",
   },
   {
-    id: "2",
-    name: "NATS",
+    id: "7",
+    name: "NATS World",
     color: "green",
     type: "organization",
     website: "https://www.natsworld.org/",
     logo: "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/NATS.png",
   },
-
   {
-    id: "4",
-    name: "American Telugu Association (ATA)",
+    id: "8",
+    name: "American Telugu Association",
     color: "orange",
     type: "organization",
     website: "https://americanteluguassociation.org/",
     logo: "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/ATA.webp",
-  },
-  {
-    id: "5",
-    name: "American Andhra Association (AAA)",
-    color: "red",
-    type: "organization",
-    website: "https://www.theaaa.org/Global/index",
-    logo: "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/AndhraAmericanAssociation.png",
   },
 ];
 
@@ -94,12 +85,14 @@ const sampleOrganizations: Organization[] = [
 const TeluguOrganizationsPreview: React.FC = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [previewIndex, setPreviewIndex] = useState<number>(0);
-  const [isPreviewAutoPlaying, setIsPreviewAutoPlaying] =
-    useState<boolean>(true);
-  const [isPreviewHovered, setIsPreviewHovered] = useState<boolean>(false);
+  const [translateX, setTranslateX] = useState<number>(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState<boolean>(true);
+  const [isHovered, setIsHovered] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isTransitioning, setIsTransitioning] = useState<boolean>(true);
+  
   const itemsPerView = 6;
+  const itemWidth = 50 / itemsPerView; // Percentage width per item
 
   // Fetch organization data from Payload CMS API or use sample data
   useEffect(() => {
@@ -128,41 +121,90 @@ const TeluguOrganizationsPreview: React.FC = () => {
     fetchOrganizations();
   }, []);
 
-  // Auto-play functionality
+  // Create extended array for infinite scroll
+  const extendedOrganizations = React.useMemo(() => {
+    if (organizations.length === 0) return [];
+    
+    // Create enough duplicates to ensure smooth infinite scrolling
+    const duplicateCount = Math.max(2, Math.ceil(itemsPerView / organizations.length));
+    const extended = [];
+    
+    for (let i = 0; i < duplicateCount; i++) {
+      extended.push(...organizations.map((org, index) => ({
+        ...org,
+        id: `${org.id}-${i}-${index}`, // Unique ID for React keys
+        originalIndex: index
+      })));
+    }
+    
+    return extended;
+  }, [organizations, itemsPerView]);
+
+  // Auto-play functionality with infinite loop
   useEffect(() => {
-    if (
-      !isPreviewAutoPlaying ||
-      isPreviewHovered ||
-      organizations.length <= itemsPerView
-    )
-      return;
+    if (!isAutoPlaying || isHovered || organizations.length === 0) return;
 
     const interval = setInterval(() => {
-      setPreviewIndex((prev) =>
-        prev >= Math.max(0, organizations.length - itemsPerView) ? 0 : prev + 1,
-      );
-    }, 3000);
+      setTranslateX(prev => {
+        const newTranslateX = prev + itemWidth;
+        
+        // Reset position when we've scrolled through one complete set
+        if (newTranslateX >= organizations.length * itemWidth) {
+          // Temporarily disable transition for seamless reset
+          setIsTransitioning(false);
+          setTimeout(() => {
+            setTranslateX(0);
+            setTimeout(() => setIsTransitioning(true), 50);
+          }, 50);
+          return prev;
+        }
+        
+        return newTranslateX;
+      });
+    }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPreviewAutoPlaying, isPreviewHovered, organizations.length]);
+  }, [isAutoPlaying, isHovered, organizations.length, itemWidth]);
 
-  const goToSlide = (index: number): void => setCurrentIndex(index);
-  const nextPreviewSlide = (): void =>
-    setPreviewIndex((prev) =>
-      prev >= Math.max(0, organizations.length - itemsPerView) ? 0 : prev + 1,
-    );
-  const prevPreviewSlide = (): void =>
-    setPreviewIndex((prev) =>
-      prev <= 0 ? Math.max(0, organizations.length - itemsPerView) : prev - 1,
-    );
-
-  const theme = {
-    title: "text-gray-800",
-    description: "text-gray-600",
-    card: "bg-white shadow-md",
+  const goToSlide = (index: number): void => {
+    setCurrentIndex(index);
+    setTranslateX(index * itemWidth);
   };
 
-  const getBorderColor = (org: Organization, isSelected: boolean): string => {
+  const nextSlide = (): void => {
+    setTranslateX(prev => {
+      const newTranslateX = prev + itemWidth;
+      
+      if (newTranslateX >= organizations.length * itemWidth) {
+        setIsTransitioning(false);
+        setTimeout(() => {
+          setTranslateX(0);
+          setTimeout(() => setIsTransitioning(true), 50);
+        }, 300);
+        return prev;
+      }
+      
+      return newTranslateX;
+    });
+  };
+
+  const prevSlide = (): void => {
+    setTranslateX(prev => {
+      if (prev <= 0) {
+        const lastPosition = (organizations.length - itemsPerView) * itemWidth;
+        setIsTransitioning(false);
+        setTimeout(() => {
+          setTranslateX(lastPosition);
+          setTimeout(() => setIsTransitioning(true), 50);
+        }, 50);
+        return prev;
+      }
+      
+      return prev - itemWidth;
+    });
+  };
+
+  const getBorderColor = (org: any, isSelected: boolean): string => {
     if (!isSelected) return "transparent";
     const colorMap: Record<string, string> = {
       blue: "#3b82f6",
@@ -184,7 +226,7 @@ const TeluguOrganizationsPreview: React.FC = () => {
 
   // Enhanced organization logo rendering with actual logos or color-coded backgrounds
   const renderOrganizationLogo = (
-    org: Organization,
+    org: any,
     size: "medium" | "large" = "medium",
   ): JSX.Element => {
     const colorMap: Record<string, string> = {
@@ -274,27 +316,25 @@ const TeluguOrganizationsPreview: React.FC = () => {
     );
   }
 
-  const maxPreviewIndex = Math.max(0, organizations.length - itemsPerView);
-
   return (
-    <div className="max-w-6xl mx-auto ">
+    <div className="max-w-6xl mx-auto bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8 rounded-2xl">
       <div className="mt-8">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
-              Telugu Organizations
+              Organizations
             </h3>
           </div>
           <button
-            onClick={() => setIsPreviewAutoPlaying(!isPreviewAutoPlaying)}
+            onClick={() => setIsAutoPlaying(!isAutoPlaying)}
             className="bg-white/10 backdrop-blur-sm border border-white/20 p-3 rounded-xl transition-all duration-300 hover:scale-105 hover:bg-white/20"
             aria-label={
-              isPreviewAutoPlaying
+              isAutoPlaying
                 ? "Pause preview autoplay"
                 : "Resume preview autoplay"
             }
           >
-            {isPreviewAutoPlaying ? (
+            {isAutoPlaying ? (
               <div className="w-5 h-5 flex items-center justify-center text-white">
                 <div className="w-1.5 h-4 bg-current mr-1"></div>
                 <div className="w-1.5 h-4 bg-current"></div>
@@ -307,24 +347,24 @@ const TeluguOrganizationsPreview: React.FC = () => {
 
         <div
           className="relative overflow-hidden"
-          onMouseEnter={() => setIsPreviewHovered(true)}
-          onMouseLeave={() => setIsPreviewHovered(false)}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
           <div
-            className="flex transition-transform duration-500 ease-in-out gap-4"
+            className={`flex gap-4 ${isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
             style={{
-              transform: `translateX(-${previewIndex * (100 / itemsPerView)}%)`,
-              width: `${(organizations.length / itemsPerView) * 100}%`,
+              transform: `translateX(-${translateX}%)`,
+              width: `${(extendedOrganizations.length / itemsPerView) * 100}%`,
             }}
           >
-            {organizations.map((org, index) => (
+            {extendedOrganizations.map((org, index) => (
               <button
                 key={org.id}
-                onClick={() => goToSlide(index)}
+                onClick={() => goToSlide(org.originalIndex)}
                 className="bg-white/10 backdrop-blur-sm rounded-xl p-5 transition-all duration-300 transform hover:scale-105 hover:shadow-xl border-2 group flex-shrink-0 hover:bg-white/20"
                 style={{
-                  width: `${100 / organizations.length}%`,
-                  borderColor: getBorderColor(org, index === currentIndex),
+                  width: `${100 / extendedOrganizations.length}%`,
+                  borderColor: getBorderColor(org, org.originalIndex === currentIndex),
                 }}
               >
                 <div className="text-center">
@@ -337,10 +377,7 @@ const TeluguOrganizationsPreview: React.FC = () => {
 
                   <div className="flex items-center justify-center space-x-2">
                     <div className="flex items-center space-x-1">
-                      <MapPin className="w-3 h-3 text-blue-400" />
-                      <span className="text-xs text-slate-400">{org.type}</span>
                     </div>
-                    <Clock className="w-3 h-3 text-slate-400" />
                   </div>
                 </div>
               </button>
@@ -348,43 +385,39 @@ const TeluguOrganizationsPreview: React.FC = () => {
           </div>
 
           {/* Navigation arrows */}
-          {maxPreviewIndex > 0 && (
-            <>
-              <button
-                onClick={prevPreviewSlide}
-                className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 p-3 rounded-full transition-all duration-300 hover:scale-110 z-10 -ml-2"
-                aria-label="Previous preview items"
-              >
-                <ChevronLeft className="w-4 h-4 text-white" />
-              </button>
-              <button
-                onClick={nextPreviewSlide}
-                className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 p-3 rounded-full transition-all duration-300 hover:scale-110 z-10 -mr-2"
-                aria-label="Next preview items"
-              >
-                <ChevronRight className="w-4 h-4 text-white" />
-              </button>
-            </>
-          )}
+          <button
+            onClick={prevSlide}
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 p-3 rounded-full transition-all duration-300 hover:scale-110 z-10 -ml-2"
+            aria-label="Previous items"
+          >
+            <ChevronLeft className="w-4 h-4 text-white" />
+          </button>
+          <button
+            onClick={nextSlide}
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 p-3 rounded-full transition-all duration-300 hover:scale-110 z-10 -mr-2"
+            aria-label="Next items"
+          >
+            <ChevronRight className="w-4 h-4 text-white" />
+          </button>
         </div>
 
-        {/* Pagination dots */}
-        {maxPreviewIndex > 0 && (
+        {/* Pagination dots - only show if we have more than itemsPerView organizations */}
+        {organizations.length > itemsPerView && (
           <div className="flex justify-center mt-6 space-x-2">
-            {Array.from({ length: maxPreviewIndex + 1 }).map((_, index) => (
+            {Array.from({ length: Math.min(5, Math.ceil(organizations.length / itemsPerView)) }).map((_, index) => (
               <button
                 key={index}
                 onClick={() => {
-                  setIsPreviewAutoPlaying(false);
-                  setPreviewIndex(index);
-                  setTimeout(() => setIsPreviewAutoPlaying(true), 10000);
+                  setIsAutoPlaying(false);
+                  goToSlide(index * itemsPerView);
+                  setTimeout(() => setIsAutoPlaying(true), 10000);
                 }}
                 className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                  index === previewIndex
+                  Math.floor(currentIndex / itemsPerView) === index
                     ? "bg-white scale-125 shadow-lg"
                     : "bg-white/40 hover:bg-white/60"
                 }`}
-                aria-label={`Go to preview page ${index + 1}`}
+                aria-label={`Go to page ${index + 1}`}
               />
             ))}
           </div>

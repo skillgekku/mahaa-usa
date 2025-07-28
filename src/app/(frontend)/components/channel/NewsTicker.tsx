@@ -1,30 +1,51 @@
-// components/NewsTicker.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, ExternalLink } from "lucide-react";
 
 interface NewsItem {
   id: number;
   text: string;
   bgGradient: string;
+  link?: string;
+  isExternal?: boolean;
 }
 
 const newsItems: NewsItem[] = [
   {
     id: 1,
-    text: "Global Markets Surge as New Economic Policies Announced",
-    bgGradient: "from-red-600 to-orange-600",
+    text: "IT Serve Synergy Conference 2025 at Puerto Rico - December 4th-5th, 2025",
+    bgGradient: "from-blue-600 to-purple-600",
+    link: "https://events.itserve.org/synergy/",
+    isExternal: true,
   },
   {
     id: 2,
-    text: "Major Breakthrough in Renewable Energy Technology Unveiled",
-    bgGradient: "from-blue-600 to-teal-600",
+    text: "TTA Mega Convention @ Charlotte, NC - July 17th-19th, 2026",
+    bgGradient: "from-orange-600 to-red-600",
+    link: "https://mytelanganaus.org/",
+    isExternal: true,
   },
   {
     id: 3,
-    text: "International Summit Addresses Climate Change Solutions",
-    bgGradient: "from-green-600 to-lime-600",
+    text: "Exclusive Interview with TANA's New President ~ Dr. Naren Kodali",
+    bgGradient: "from-green-600 to-teal-600",
+    link: "https://youtu.be/hgikPt6EoNI?feature=shared",
+    isExternal: true,
+  },
+  {
+    id: 4,
+    text: "Exclusive Interview with TTA's President ~ Naveen Reddy Mallipeddi",
+    bgGradient: "from-purple-600 to-pink-600",
+    link: "https://youtu.be/RcIX4xjTkf0?feature=shared",
+    isExternal: true,
+  },
+  {
+    id: 5,
+    text: "Registrations Open for Miss Telugu USA 2026 - Apply Now!",
+    bgGradient: "from-pink-600 to-rose-600",
+    link: "https://www.missteluguusa.com/index.php",
+    isExternal: true,
   },
 ];
 
@@ -35,12 +56,12 @@ const NewsTicker: React.FC = () => {
 
   // Autoplay logic
   useEffect(() => {
-    if (!isAutoPlaying) return;
+    if (!isAutoPlaying || isHovered) return;
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % newsItems.length);
-    }, 5000);
+    }, 6000); // Increased to 6 seconds for better readability
     return () => clearInterval(interval);
-  }, [isAutoPlaying]);
+  }, [isAutoPlaying, isHovered]);
 
   // Navigation functions
   const prevSlide = () => {
@@ -78,6 +99,19 @@ const NewsTicker: React.FC = () => {
     (e.currentTarget as HTMLElement).dataset.touchStartX = "";
   };
 
+  // Handle link navigation
+  const handleReadMore = (news: NewsItem) => {
+    if (news.link) {
+      if (news.isExternal) {
+        window.open(news.link, '_blank', 'noopener,noreferrer');
+      } else {
+        window.location.href = news.link;
+      }
+    } else {
+      alert(`View details for: ${news.text}`);
+    }
+  };
+
   // Current news item
   const currentNews = newsItems[currentIndex];
 
@@ -100,16 +134,16 @@ const NewsTicker: React.FC = () => {
             key={news.id}
             className="w-full flex-shrink-0 px-4 py-12 bg-gray-900 text-white"
           >
-            <div className="max-w-3xl mx-auto text-center">
-              <p className="text-base xl:text-3xl mb-6 animate-pulse font-bold uppercase tracking-wider">
+            <div className="max-w-4xl mx-auto text-center">
+              <p className="text-base xl:text-3xl mb-6 animate-pulse font-bold uppercase tracking-wider bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
                 Breaking News
               </p>
 
-              <div className="overflow-hidden justify-center">
+              <div className="overflow-hidden justify-center mb-6">
                 <p
-                  className="text-xs md:text-xl font-semibold text-center mx-auto line-clamp-3"
+                  className="text-sm md:text-xl lg:text-2xl font-semibold text-center mx-auto leading-relaxed"
                   style={{
-                    maxWidth: "600px", // Adjusted to encourage wrapping into three lines
+                    maxWidth: "800px",
                   }}
                 >
                   {news.text}
@@ -117,12 +151,16 @@ const NewsTicker: React.FC = () => {
               </div>
 
               <button
-                onClick={() => alert(`View details for: ${news.text}`)}
-                className={`bg-gradient-to-r ${news.bgGradient} hover:opacity-90 text-white px-2 md:px-6 py-2 md:py-3 rounded-sm flex items-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl mx-auto mt-4`}
+                onClick={() => handleReadMore(news)}
+                className={`bg-gradient-to-r ${news.bgGradient} hover:opacity-90 text-white px-4 md:px-8 py-3 md:py-4 rounded-lg flex items-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl mx-auto`}
               >
-                <Play className="w-4 h-4 md:w-5 md:h-5" />
+                {news.isExternal ? (
+                  <ExternalLink className="w-4 h-4 md:w-5 md:h-5" />
+                ) : (
+                  <Play className="w-4 h-4 md:w-5 md:h-5" />
+                )}
                 <span className="font-semibold text-sm md:text-base">
-                  Read More
+                  {news.link ? 'Visit Link' : 'Read More'}
                 </span>
               </button>
             </div>
@@ -162,13 +200,23 @@ const NewsTicker: React.FC = () => {
         )}
       </button>
 
-      {/* Progress Bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-black bg-opacity-30 z-40">
-        <div
-          className={`h-full bg-gradient-to-r ${currentNews.bgGradient} transition-all duration-500`}
-          style={{ width: `${((currentIndex + 1) / newsItems.length) * 100}%` }}
-        ></div>
+      {/* Progress Indicators */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-40">
+        {newsItems.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentIndex(index)}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              index === currentIndex 
+                ? `bg-gradient-to-r ${currentNews.bgGradient}` 
+                : 'bg-white bg-opacity-50 hover:bg-opacity-70'
+            }`}
+            aria-label={`Go to news ${index + 1}`}
+          />
+        ))}
       </div>
+
+    
     </div>
   );
 };

@@ -263,20 +263,24 @@ export default function Header({ onScheduleClick, isPiPActive }: HeaderProps) {
 
             <div className="flex items-center space-x-2">
               {/* Contact & Social */}
-              <div className="text-center md:text-right">
-                <div className="flex justify-center md:justify-end items-center space-x-3 mb-3">
-                  <SocialIcon
-                    url="https://www.youtube.com/@mahaanewsusa"
-                    style={{ height: 32, width: 32 }}
-                    className="hover:scale-110 transition-transform"
-                  />
-                  <SocialIcon
-                    url="https://www.instagram.com/mahaausa/"
-                    style={{ height: 32, width: 32 }}
-                    className="hover:scale-110 transition-transform"
-                  />
-                </div>
-              </div>
+             <div className="text-center md:text-right">
+  <div className="flex justify-center md:justify-end items-center space-x-3 mb-3">
+    <SocialIcon
+      url="https://www.youtube.com/@mahaanewsusa"
+      style={{ height: 32, width: 32 }}
+      className="hover:scale-110 transition-transform"
+      target="_blank"
+      rel="noopener noreferrer"
+    />
+    <SocialIcon
+      url="https://www.instagram.com/mahaausa/"
+      style={{ height: 32, width: 32 }}
+      className="hover:scale-110 transition-transform"
+      target="_blank"
+      rel="noopener noreferrer"
+    />
+  </div>
+</div>
             </div>
           </div>
         </div>
