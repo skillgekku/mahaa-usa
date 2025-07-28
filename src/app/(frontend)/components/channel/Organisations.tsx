@@ -317,7 +317,7 @@ const TeluguOrganizationsPreview: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8 rounded-2xl">
+    <div className="max-w-6xl mx-auto bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8 rounded-xl">
       <div className="mt-8">
         <div className="flex items-center justify-between mb-6">
           <div>

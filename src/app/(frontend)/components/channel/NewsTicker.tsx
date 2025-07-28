@@ -59,7 +59,7 @@ const NewsTicker: React.FC = () => {
     if (!isAutoPlaying || isHovered) return;
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % newsItems.length);
-    }, 6000); // Increased to 6 seconds for better readability
+    }, 1000); // Increased to 6 seconds for better readability
     return () => clearInterval(interval);
   }, [isAutoPlaying, isHovered]);
 
