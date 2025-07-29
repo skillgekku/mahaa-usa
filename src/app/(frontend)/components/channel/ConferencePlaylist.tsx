@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Play, Clock, Calendar, Star, ArrowLeft, Youtube, Shuffle, List, Grid } from 'lucide-react'
+import { Play, Clock, Calendar, Star, ArrowLeft, Youtube, Shuffle, List, Grid, Search, Loader2 } from 'lucide-react'
 import type { YouTubeVideo, ChannelConfig } from '@/app/(frontend)/lib/types'
 import { useTheme } from '@/app/(frontend)/hooks/useTheme'
 
@@ -11,6 +11,35 @@ interface ConferencePlaylistProps {
   conference: ChannelConfig
   onBack: () => void
   onPlayVideo: (videoId: string) => void
+}
+
+// YouTube API interface
+interface YouTubeAPIVideo {
+  id: {
+    videoId: string
+  }
+  snippet: {
+    title: string
+    description: string
+    publishedAt: string
+    thumbnails: {
+      default: { url: string }
+      medium: { url: string }
+      high: { url: string }
+    }
+    channelTitle: string
+  }
+}
+
+interface YouTubeVideoDetails {
+  id: string
+  contentDetails: {
+    duration: string
+  }
+  statistics: {
+    viewCount: string
+    likeCount: string
+  }
 }
 
 export default function ConferencePlaylist({
@@ -25,9 +54,17 @@ export default function ConferencePlaylist({
   const [shuffledPlaylist, setShuffledPlaylist] = useState<YouTubeVideo[]>([])
   const [isShuffled, setIsShuffled] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [searchKeyword, setSearchKeyword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [youtubeVideos, setYoutubeVideos] = useState<YouTubeVideo[]>([])
+  const [error, setError] = useState<string | null>(null)
 
-  // Get playlist from conference
-  const CONFERENCE_PLAYLIST = conference.youtubePlaylist || []
+  // YouTube channel ID for @mahaanewsusa
+  const CHANNEL_ID = 'UC5ZTBfBlSCq7O88oZhZMsQQ' // You'll need to get this from YouTube API
+  const YOUTUBE_API_KEY = 'AIzaSyBceaEiNqubHTLh4P5gIYGbP8AHNf8itZw' // Add your API key
+
+  // Get playlist from conference or fetched videos
+  const CONFERENCE_PLAYLIST = youtubeVideos.length > 0 ? youtubeVideos : (conference.youtubePlaylist || [])
 
   // Initialize playlist
   useEffect(() => {
@@ -41,6 +78,165 @@ export default function ConferencePlaylist({
     }, 60000)
     return () => clearInterval(timer)
   }, [])
+
+  // Fetch channel ID from channel handle
+  const getChannelIdFromHandle = async (handle: string): Promise<string | null> => {
+    try {
+      const response = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${handle}&key=${YOUTUBE_API_KEY}`
+      )
+      const data = await response.json()
+      
+      if (data.items && data.items.length > 0) {
+        return data.items[0].snippet.channelId
+      }
+      return null
+    } catch (error) {
+      console.error('Error fetching channel ID:', error)
+      return null
+    }
+  }
+
+  // Convert ISO 8601 duration to readable format
+  const convertDuration = (duration: string): string => {
+    const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/)
+    if (!match) return '0:00'
+    
+    const hours = parseInt(match[1]?.replace('H', '') || '0')
+    const minutes = parseInt(match[2]?.replace('M', '') || '0')
+    const seconds = parseInt(match[3]?.replace('S', '') || '0')
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+    }
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`
+  }
+
+  // Categorize video based on title and description
+  const categorizeVideo = (title: string, description: string): string => {
+    const titleLower = title.toLowerCase()
+    const descLower = description.toLowerCase()
+    
+    if (titleLower.includes('conference') || titleLower.includes('summit')) return 'Conference'
+    if (titleLower.includes('youth') || titleLower.includes('student')) return 'Youth Event'
+    if (titleLower.includes('political') || titleLower.includes('election')) return 'Political'
+    if (titleLower.includes('award') || titleLower.includes('recognition')) return 'Awards'
+    if (titleLower.includes('entertainment') || titleLower.includes('cultural')) return 'Entertainment'
+    if (titleLower.includes('interview') || titleLower.includes('discussion')) return 'Interview'
+    if (titleLower.includes('pageant') || titleLower.includes('beauty')) return 'Pageant'
+    if (titleLower.includes('opening') || titleLower.includes('ceremony')) return 'Opening Ceremony'
+    if (titleLower.includes('business') || titleLower.includes('trade')) return 'Business'
+    
+    return 'General'
+  }
+
+  // Generate random scheduled time for videos
+  const generateScheduledTime = (): string => {
+    const hour = Math.floor(Math.random() * 24)
+    const minute = Math.floor(Math.random() * 60)
+    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+  }
+
+  // Fetch videos from YouTube channel with keyword search
+  const fetchYouTubeVideos = async (keyword: string = '') => {
+    if (!YOUTUBE_API_KEY) {
+      setError('YouTube API key not configured')
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      // First, get the channel ID from the handle
+      let channelId = await getChannelIdFromHandle('mahaanewsusa')
+      
+      if (!channelId) {
+        // Fallback: search for the channel directly
+        const channelResponse = await fetch(
+          `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=mahaa+news+usa&key=${YOUTUBE_API_KEY}`
+        )
+        const channelData = await channelResponse.json()
+        
+        if (channelData.items && channelData.items.length > 0) {
+          channelId = channelData.items[0].snippet.channelId
+        } else {
+          throw new Error('Channel not found')
+        }
+      }
+
+      // Search for videos in the channel
+      const searchQuery = keyword 
+        ? `${keyword} site:youtube.com/channel/${channelId}`
+        : ''
+      
+      const searchResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&type=video&order=date&maxResults=50${keyword ? `&q=${encodeURIComponent(keyword)}` : ''}&key=${YOUTUBE_API_KEY}`
+      )
+
+      if (!searchResponse.ok) {
+        throw new Error(`YouTube API error: ${searchResponse.status}`)
+      }
+
+      const searchData = await searchResponse.json()
+
+      if (!searchData.items || searchData.items.length === 0) {
+        setYoutubeVideos([])
+        setError('No videos found matching the criteria')
+        return
+      }
+
+      // Get video IDs for additional details
+      const videoIds = searchData.items.map((item: YouTubeAPIVideo) => item.id.videoId).join(',')
+
+      // Fetch video details (duration, statistics)
+      const detailsResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${videoIds}&key=${YOUTUBE_API_KEY}`
+      )
+
+      const detailsData = await detailsResponse.json()
+      const videoDetails: { [key: string]: YouTubeVideoDetails } = {}
+      
+      detailsData.items?.forEach((item: YouTubeVideoDetails) => {
+        videoDetails[item.id] = item
+      })
+
+      // Transform YouTube API response to our format
+      const transformedVideos: YouTubeVideo[] = searchData.items.map((item: YouTubeAPIVideo, index: number) => {
+        const details = videoDetails[item.id.videoId]
+        return {
+          id: `yt-${item.id.videoId}`,
+          youtubeId: item.id.videoId,
+          title: item.snippet.title,
+          description: item.snippet.description,
+          duration: details ? convertDuration(details.contentDetails.duration) : '0:00',
+          category: categorizeVideo(item.snippet.title, item.snippet.description),
+          scheduledTime: generateScheduledTime(),
+          thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
+          viewCount: details?.statistics.viewCount || '0',
+          publishedAt: item.snippet.publishedAt
+        }
+      })
+
+      setYoutubeVideos(transformedVideos)
+    } catch (error) {
+      console.error('Error fetching YouTube videos:', error)
+      setError(error instanceof Error ? error.message : 'Failed to fetch videos')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Initial load
+  useEffect(() => {
+    fetchYouTubeVideos()
+  }, [])
+
+  // Handle search
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    fetchYouTubeVideos(searchKeyword)
+  }
 
   // Function to get YouTube thumbnail URL
   const getYouTubeThumbnail = (
@@ -125,6 +321,7 @@ export default function ConferencePlaylist({
       'Opening Ceremony': 'bg-indigo-600',
       Cultural: 'bg-teal-600',
       Business: 'bg-emerald-600',
+      General: 'bg-gray-600',
     }
     return colors[category] || 'bg-gray-600'
   }
@@ -161,14 +358,14 @@ export default function ConferencePlaylist({
               </div>
               <div className="min-w-0">
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold truncate">
-                  {conference.name}
+                  Mahaa News USA
                 </h1>
                 <p className="text-gray-100 flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base">
                   <Youtube className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                   <span className="hidden sm:inline">
-                    {conference.description} - YouTube Playlist
+                    Latest Videos from YouTube Channel
                   </span>
-                  <span className="sm:hidden">{conference.description}</span>
+                  <span className="sm:hidden">YouTube Channel</span>
                   <span>• {CONFERENCE_PLAYLIST.length} Videos</span>
                 </p>
               </div>
@@ -190,6 +387,42 @@ export default function ConferencePlaylist({
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className={`${theme.card} border-b px-3 sm:px-6 py-3 sm:py-4`}>
+        <div className="container mx-auto">
+          <form onSubmit={handleSearch} className="flex gap-2 mb-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                placeholder="Search videos by keyword..."
+                className={`w-full pl-10 pr-4 py-2 rounded-lg border ${theme.card} ${theme.title} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`px-4 py-2 bg-gradient-to-r ${conference.bgGradient} text-white rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center space-x-2`}
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Search className="w-4 h-4" />
+              )}
+              <span className="hidden sm:inline">Search</span>
+            </button>
+          </form>
+
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
         </div>
       </div>
 
@@ -250,8 +483,18 @@ export default function ConferencePlaylist({
       </div>
 
       <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-8">
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="flex items-center space-x-3">
+              <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+              <span className={theme.title}>Loading videos...</span>
+            </div>
+          </div>
+        )}
+
         {/* Mobile/Tablet Optimized Currently Playing Section */}
-        {currentVideo && viewMode === 'schedule' && (
+        {currentVideo && viewMode === 'schedule' && !isLoading && (
           <div
             className={`bg-gradient-to-r ${conference.bgGradient} rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 text-white overflow-hidden relative`}
           >
@@ -326,244 +569,273 @@ export default function ConferencePlaylist({
         )}
 
         {/* Responsive Video Grid/List */}
-        <div
-          className={
-            viewMode === 'schedule'
-              ? 'space-y-3 sm:space-y-4'
-              : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6'
-          }
-        >
-          {viewMode === 'schedule' ? (
-            // Mobile/Tablet Optimized Schedule View
-            <>
-              <h2
-                className={`text-xl sm:text-2xl font-bold ${theme.title} mb-4 sm:mb-6 flex items-center space-x-2`}
-              >
-                <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span>Today&apos;s Schedule</span>
-              </h2>
-              {getScheduledVideos().map((video, index) => (
-                <div
-                  key={video.id}
-                  className={`${theme.card} rounded-xl p-4 sm:p-6 border transition-all duration-300 hover:shadow-lg cursor-pointer touch-target ${
-                    video.isCurrentlyPlaying
-                      ? `border-opacity-100 shadow-lg`
-                      : 'hover:border-gray-300'
-                  }`}
-                  style={{
-                    borderColor: video.isCurrentlyPlaying
-                      ? conference.color === 'blue'
-                        ? '#3b82f6'
-                        : conference.color === 'green'
-                          ? '#10b981'
-                          : conference.color === 'red'
-                            ? '#ef4444'
-                            : conference.color === 'purple'
-                              ? '#8b5cf6'
-                              : conference.color === 'yellow'
-                                ? '#f59e0b'
-                                : '#6b7280'
-                      : 'transparent',
-                  }}
-                  onClick={() => onPlayVideo(video.youtubeId)}
+        {!isLoading && (
+          <div
+            className={
+              viewMode === 'schedule'
+                ? 'space-y-3 sm:space-y-4'
+                : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6'
+            }
+          >
+            {viewMode === 'schedule' ? (
+              // Mobile/Tablet Optimized Schedule View
+              <>
+                <h2
+                  className={`text-xl sm:text-2xl font-bold ${theme.title} mb-4 sm:mb-6 flex items-center space-x-2`}
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-4">
-                    <div className="flex items-center justify-between sm:flex-col sm:flex-shrink-0 sm:text-center">
-                      <div className={`text-base sm:text-lg font-bold ${theme.title} sm:mb-1`}>
-                        {video.scheduledTime}
+                  <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <span>Video Schedule</span>
+                </h2>
+                {getScheduledVideos().map((video, index) => (
+                  <div
+                    key={video.id}
+                    className={`${theme.card} rounded-xl p-4 sm:p-6 border transition-all duration-300 hover:shadow-lg cursor-pointer touch-target ${
+                      video.isCurrentlyPlaying
+                        ? `border-opacity-100 shadow-lg`
+                        : 'hover:border-gray-300'
+                    }`}
+                    style={{
+                      borderColor: video.isCurrentlyPlaying
+                        ? conference.color === 'blue'
+                          ? '#3b82f6'
+                          : conference.color === 'green'
+                            ? '#10b981'
+                            : conference.color === 'red'
+                              ? '#ef4444'
+                              : conference.color === 'purple'
+                                ? '#8b5cf6'
+                                : conference.color === 'yellow'
+                                  ? '#f59e0b'
+                                  : '#6b7280'
+                        : 'transparent',
+                    }}
+                    onClick={() => onPlayVideo(video.youtubeId)}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-4">
+                      <div className="flex items-center justify-between sm:flex-col sm:flex-shrink-0 sm:text-center">
+                        <div className={`text-base sm:text-lg font-bold ${theme.title} sm:mb-1`}>
+                          {video.scheduledTime}
+                        </div>
+                        <div className={`text-xs ${theme.description}`}>{video.duration}</div>
                       </div>
-                      <div className={`text-xs ${theme.description}`}>{video.duration}</div>
-                    </div>
 
-                    {/* Video thumbnail in schedule view - responsive */}
-                    <div className="flex-shrink-0 self-center sm:self-start">
+                      {/* Video thumbnail in schedule view - responsive */}
+                      <div className="flex-shrink-0 self-center sm:self-start">
+                        <img
+                          src={getYouTubeThumbnail(video.youtubeId, 'medium')}
+                          alt={video.title}
+                          className="w-20 h-15 sm:w-24 sm:h-18 rounded-lg object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.style.display = 'none'
+                            const parent = target.parentElement
+                            if (parent) {
+                              parent.innerHTML = `
+                                <div class="w-20 h-15 sm:w-24 sm:h-18 rounded-lg bg-gray-800 flex items-center justify-center">
+                                  <svg class="w-6 h-6 sm:w-8 sm:h-8 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                  </svg>
+                                </div>
+                              `
+                            }
+                          }}
+                        />
+                      </div>
+
+                      <div className="flex-1 min-w-0 text-center sm:text-left">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 mb-2 space-y-1 sm:space-y-0">
+                          <h3 className={`text-lg sm:text-xl font-bold ${theme.title} line-clamp-2`}>
+                            {video.title}
+                          </h3>
+                          <div className="flex items-center justify-center sm:justify-start space-x-2">
+                            {video.isCurrentlyPlaying && (
+                              <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                                LIVE
+                              </span>
+                            )}
+                            <Youtube className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0" />
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3 mb-3">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs sm:text-sm text-white ${getCategoryColor(video.category)}`}
+                          >
+                            {video.category}
+                          </span>
+                          <div className="flex items-center space-x-1">
+                            <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-yellow-400 text-yellow-400" />
+                            <span className={`text-xs sm:text-sm ${theme.description}`}>4.5</span>
+                          </div>
+                        
+                        </div>
+
+                        <p className={`${theme.description} text-xs sm:text-sm mb-4 line-clamp-2`}>
+                          {video.description}
+                        </p>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onPlayVideo(video.youtubeId)
+                          }}
+                          className={`bg-gradient-to-r ${conference.bgGradient} hover:opacity-90 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 transition-colors w-full sm:w-auto touch-target`}
+                        >
+                          <Play className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <span className="text-sm">Stream Video</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            ) : (
+              // Mobile/Tablet/TV Optimized Playlist View
+              <>
+                <div className="col-span-full mb-4 sm:mb-6">
+                  <h2
+                    className={`text-xl sm:text-2xl font-bold ${theme.title} flex items-center space-x-2`}
+                  >
+                    <List className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <span>Video Playlist</span>
+                    {isShuffled && (
+                      <span
+                        className={`text-base sm:text-lg`}
+                        style={{
+                          color:
+                            conference.color === 'blue'
+                              ? '#3b82f6'
+                              : conference.color === 'green'
+                                ? '#10b981'
+                                : conference.color === 'red'
+                                  ? '#ef4444'
+                                  : conference.color === 'purple'
+                                    ? '#8b5cf6'
+                                    : conference.color === 'yellow'
+                                      ? '#f59e0b'
+                                      : '#6b7280',
+                        }}
+                      >
+                        • Shuffled
+                      </span>
+                    )}
+                  </h2>
+                </div>
+
+                {getCurrentPlaylist().map((video, index) => (
+                  <div
+                    key={video.id}
+                    className={`${theme.card} rounded-xl overflow-hidden border transition-all duration-300 hover:shadow-lg cursor-pointer hover:border-gray-300 transform hover:scale-105 touch-target`}
+                    onClick={() => onPlayVideo(video.youtubeId)}
+                  >
+                    {/* Responsive YouTube Video Thumbnail */}
+                    <div className="relative aspect-video overflow-hidden">
                       <img
-                        src={getYouTubeThumbnail(video.youtubeId, 'medium')}
+                        src={getYouTubeThumbnail(video.youtubeId, 'high')}
                         alt={video.title}
-                        className="w-20 h-15 sm:w-24 sm:h-18 rounded-lg object-cover"
+                        className="w-full h-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement
                           target.style.display = 'none'
                           const parent = target.parentElement
                           if (parent) {
-                            parent.innerHTML = `
-                              <div class="w-20 h-15 sm:w-24 sm:h-18 rounded-lg bg-gray-800 flex items-center justify-center">
-                                <svg class="w-6 h-6 sm:w-8 sm:h-8 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                                </svg>
+                            const fallback = document.createElement('div')
+                            fallback.className =
+                              'w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center'
+                            fallback.innerHTML = `
+                              <div class="text-center text-white">
+                                <div class="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2">
+                                  <svg class="w-full h-full text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                  </svg>
+                                </div>
+                                <div class="text-xs sm:text-sm opacity-75">${video.duration}</div>
                               </div>
                             `
+                            parent.appendChild(fallback)
                           }
                         }}
                       />
-                    </div>
 
-                    <div className="flex-1 min-w-0 text-center sm:text-left">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 mb-2 space-y-1 sm:space-y-0">
-                        <h3 className={`text-lg sm:text-xl font-bold ${theme.title} line-clamp-2`}>
-                          {video.title}
-                        </h3>
-                        <div className="flex items-center justify-center sm:justify-start space-x-2">
-                          {video.isCurrentlyPlaying && (
-                            <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                              LIVE
-                            </span>
-                          )}
-                          <Youtube className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0" />
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3 mb-3">
+                      {/* Responsive overlay elements */}
+                      <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs sm:text-sm text-white ${getCategoryColor(video.category)}`}
+                          className={`px-2 py-1 rounded text-xs text-white ${getCategoryColor(video.category)}`}
                         >
                           {video.category}
                         </span>
-                        <div className="flex items-center space-x-1">
-                          <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-yellow-400 text-yellow-400" />
-                          <span className={`text-xs sm:text-sm ${theme.description}`}>4.5</span>
-                        </div>
                       </div>
+                      <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
+                        {video.scheduledTime}
+                      </div>
+                      <div className="absolute bottom-2 sm:bottom-3 right-2 sm:right-3 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
+                        {video.duration}
+                      </div>
+                      <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <Play className="w-12 h-12 sm:w-16 sm:h-16 text-white" />
+                      </div>
+                    </div>
 
-                      <p className={`${theme.description} text-xs sm:text-sm mb-4 line-clamp-2`}>
+                    <div className="p-3 sm:p-4">
+                      <h3
+                        className={`text-sm sm:text-base lg:text-lg font-bold ${theme.title} mb-2 line-clamp-2`}
+                      >
+                        {video.title}
+                      </h3>
+                      <p
+                        className={`${theme.description} text-xs sm:text-sm mb-3 line-clamp-2 hidden sm:block`}
+                      >
                         {video.description}
                       </p>
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onPlayVideo(video.youtubeId)
-                        }}
-                        className={`bg-gradient-to-r ${conference.bgGradient} hover:opacity-90 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 transition-colors w-full sm:w-auto touch-target`}
-                      >
-                        <Play className="w-3 h-3 sm:w-4 sm:h-4" />
-                        <span className="text-sm">Stream Video</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </>
-          ) : (
-            // Mobile/Tablet/TV Optimized Playlist View
-            <>
-              <div className="col-span-full mb-4 sm:mb-6">
-                <h2
-                  className={`text-xl sm:text-2xl font-bold ${theme.title} flex items-center space-x-2`}
-                >
-                  <List className="w-5 h-5 sm:w-6 sm:h-6" />
-                  <span>Video Playlist</span>
-                  {isShuffled && (
-                    <span
-                      className={`text-base sm:text-lg`}
-                      style={{
-                        color:
-                          conference.color === 'blue'
-                            ? '#3b82f6'
-                            : conference.color === 'green'
-                              ? '#10b981'
-                              : conference.color === 'red'
-                                ? '#ef4444'
-                                : conference.color === 'purple'
-                                  ? '#8b5cf6'
-                                  : conference.color === 'yellow'
-                                    ? '#f59e0b'
-                                    : '#6b7280',
-                      }}
-                    >
-                      • Shuffled
-                    </span>
-                  )}
-                </h2>
-              </div>
-
-              {getCurrentPlaylist().map((video, index) => (
-                <div
-                  key={video.id}
-                  className={`${theme.card} rounded-xl overflow-hidden border transition-all duration-300 hover:shadow-lg cursor-pointer hover:border-gray-300 transform hover:scale-105 touch-target`}
-                  onClick={() => onPlayVideo(video.youtubeId)}
-                >
-                  {/* Responsive YouTube Video Thumbnail */}
-                  <div className="relative aspect-video overflow-hidden">
-                    <img
-                      src={getYouTubeThumbnail(video.youtubeId, 'high')}
-                      alt={video.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement
-                        target.style.display = 'none'
-                        const parent = target.parentElement
-                        if (parent) {
-                          const fallback = document.createElement('div')
-                          fallback.className =
-                            'w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center'
-                          fallback.innerHTML = `
-                            <div class="text-center text-white">
-                              <div class="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2">
-                                <svg class="w-full h-full text-red-500" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                                </svg>
-                              </div>
-                              <div class="text-xs sm:text-sm opacity-75">${video.duration}</div>
-                            </div>
-                          `
-                          parent.appendChild(fallback)
-                        }
-                      }}
-                    />
-
-                    {/* Responsive overlay elements */}
-                    <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
-                      <span
-                        className={`px-2 py-1 rounded text-xs text-white ${getCategoryColor(video.category)}`}
-                      >
-                        {video.category}
-                      </span>
-                    </div>
-                    <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
-                      {video.scheduledTime}
-                    </div>
-                    <div className="absolute bottom-2 sm:bottom-3 right-2 sm:right-3 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
-                      {video.duration}
-                    </div>
-                    <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                      <Play className="w-12 h-12 sm:w-16 sm:h-16 text-white" />
-                    </div>
-                  </div>
-
-                  <div className="p-3 sm:p-4">
-                    <h3
-                      className={`text-sm sm:text-base lg:text-lg font-bold ${theme.title} mb-2 line-clamp-2`}
-                    >
-                      {video.title}
-                    </h3>
-                    <p
-                      className={`${theme.description} text-xs sm:text-sm mb-3 line-clamp-2 hidden sm:block`}
-                    >
-                      {video.description}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-yellow-400 text-yellow-400" />
-                        <span className={`text-xs sm:text-sm ${theme.description}`}>4.5</span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-yellow-400 text-yellow-400" />
+                          <span className={`text-xs sm:text-sm ${theme.description}`}>4.5</span>
+                        
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onPlayVideo(video.youtubeId)
+                          }}
+                          className={`bg-gradient-to-r ${conference.bgGradient} hover:opacity-90 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm flex items-center space-x-1 transition-colors touch-target`}
+                        >
+                          <Play className="w-3 h-3" />
+                          <span>Play</span>
+                        </button>
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onPlayVideo(video.youtubeId)
-                        }}
-                        className={`bg-gradient-to-r ${conference.bgGradient} hover:opacity-90 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm flex items-center space-x-1 transition-colors touch-target`}
-                      >
-                        <Play className="w-3 h-3" />
-                        <span>Play</span>
-                      </button>
                     </div>
                   </div>
-                </div>
-              ))}
-            </>
-          )}
-        </div>
+                ))}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* No results message */}
+        {!isLoading && CONFERENCE_PLAYLIST.length === 0 && (
+          <div className="text-center py-12">
+            <Youtube className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+            <h3 className={`text-xl font-bold ${theme.title} mb-2`}>No videos found</h3>
+            <p className={`${theme.description} mb-4`}>
+              {searchKeyword 
+                ? `No videos found matching "${searchKeyword}". Try a different search term.`
+                : 'No videos available from this channel at the moment.'
+              }
+            </p>
+            {searchKeyword && (
+              <button
+                onClick={() => {
+                  setSearchKeyword('')
+                  fetchYouTubeVideos()
+                }}
+                className={`bg-gradient-to-r ${conference.bgGradient} text-white px-4 py-2 rounded-lg hover:opacity-90`}
+              >
+                Show All Videos
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Footer */}
