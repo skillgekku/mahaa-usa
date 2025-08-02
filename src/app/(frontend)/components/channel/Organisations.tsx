@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, JSX } from "react";
-import { Play, ChevronLeft, ChevronRight, Clock, MapPin } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-// Organization interface matching Payload collection structure
 interface Organization {
   id: string;
   name: string;
@@ -13,7 +12,6 @@ interface Organization {
   logo?: string;
 }
 
-// Sample organizations data based on your list
 const sampleOrganizations: Organization[] = [
   {
     id: "1",
@@ -65,7 +63,7 @@ const sampleOrganizations: Organization[] = [
   },
   {
     id: "7",
-    name: "NATS World",
+    name: "NATS World",  
     color: "green",
     type: "organization",
     website: "https://www.natsworld.org/",
@@ -74,27 +72,197 @@ const sampleOrganizations: Organization[] = [
   {
     id: "8",
     name: "American Telugu Association",
-    color: "orange",
+    color: "orange", 
     type: "organization",
     website: "https://americanteluguassociation.org/",
     logo: "https://mx8afcx2tqxngq7w.public.blob.vercel-storage.com/ATA.webp",
   },
 ];
 
-// Component starts
-const TeluguOrganizationsPreview: React.FC = () => {
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [translateX, setTranslateX] = useState<number>(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState<boolean>(true);
-  const [isHovered, setIsHovered] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isTransitioning, setIsTransitioning] = useState<boolean>(true);
-  
-  const itemsPerView = 6;
-  const itemWidth = 50 / itemsPerView; // Percentage width per item
+const AppleTVCard: React.FC<{ org: Organization; isSelected: boolean }> = ({ org, isSelected }) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
 
-  // Fetch organization data from Payload CMS API or use sample data
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!cardRef.current) return;
+    
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    setMousePosition({
+      x: (x - centerX) / centerX,
+      y: (y - centerY) / centerY,
+    });
+  };
+
+  const handleMouseEnter = () => {
+    setIsHovering(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovering(false);
+    setMousePosition({ x: 0, y: 0 });
+  };
+
+  const getAcronym = (name: string) => {
+    const words = name
+      .split(" ")
+      .filter(
+        (word) =>
+          !["of", "and", "the", "in", "for", "to", "at", "by", "from", "with", "&"].includes(
+            word.toLowerCase()
+          )
+      );
+    return words
+      .slice(0, 3)
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase();
+  };
+
+  const colorMap: Record<string, string> = {
+    blue: "from-blue-500 via-blue-600 to-blue-700",
+    red: "from-red-500 via-red-600 to-red-700",
+    green: "from-green-500 via-green-600 to-green-700",
+    purple: "from-purple-500 via-purple-600 to-purple-700",
+    orange: "from-orange-500 via-orange-600 to-orange-700",
+  };
+
+  const gradient = colorMap[org.color] || "from-gray-500 via-gray-600 to-gray-700";
+
+  const cardTransform = isHovering
+    ? `perspective(1000px) rotateX(${mousePosition.y * -10}deg) rotateY(${mousePosition.x * 10}deg) translateZ(50px) scale(1.1)`
+    : 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px) scale(1)';
+
+  const imageTransform = isHovering
+    ? `translateX(${mousePosition.x * 10}px) translateY(${mousePosition.y * 10}px) scale(1.05)`
+    : 'translateX(0px) translateY(0px) scale(1)';
+
+  const shadowIntensity = isHovering ? 0.4 : 0.1;
+
+  return (
+    <div className="apple-tv-card-container p-2">
+      <a
+        href={org.website}
+        className="block"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <div
+          ref={cardRef}
+          className="apple-tv-card relative w-full aspect-[16/10] cursor-pointer overflow-hidden"
+          style={{
+            transform: cardTransform,
+            transition: 'transform 0.2s ease-out',
+            transformStyle: 'preserve-3d',
+            boxShadow: `0 ${isHovering ? 25 : 8}px ${isHovering ? 50 : 25}px rgba(0, 0, 0, ${shadowIntensity})`,
+          }}
+          onMouseMove={handleMouseMove}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          {/* Card Background with Gradient */}
+          <div 
+            className="absolute inset-0 rounded-2xl overflow-hidden"
+            style={{
+              background: `linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)`,
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            {/* Content Container */}
+            <div 
+              className="relative w-full h-full p-4 flex flex-col"
+              style={{
+                transform: imageTransform,
+                transition: 'transform 0.2s ease-out',
+              }}
+            >
+              {/* Logo/Image Container */}
+              <div className="flex-1 flex items-center justify-center mb-3">
+                {org.logo ? (
+                  <img
+                    src={org.logo}
+                    alt={`${org.name} logo`}
+                    className="max-w-full max-h-full object-contain"
+                    style={{
+                      filter: isHovering ? 'brightness(1.1) contrast(1.1)' : 'brightness(1) contrast(1)',
+                      transition: 'filter 0.2s ease-out',
+                    }}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      const container = target.parentElement;
+                      if (container) {
+                        container.innerHTML = `
+                          <div class="w-20 h-20 rounded-xl flex items-center justify-center bg-gradient-to-br ${gradient} text-white font-bold text-lg shadow-lg">
+                            ${getAcronym(org.name)}
+                          </div>
+                        `;
+                      }
+                    }}
+                  />
+                ) : (
+                  <div className={`w-20 h-20 rounded-xl flex items-center justify-center bg-gradient-to-br ${gradient} text-white font-bold text-lg shadow-lg`}>
+                    {getAcronym(org.name)}
+                  </div>
+                )}
+              </div>
+
+              {/* Title */}
+              <div className="text-center">
+                <h3 
+                  className="text-white font-semibold text-sm leading-tight line-clamp-2"
+                  style={{
+                    textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+                    filter: isHovering ? 'brightness(1.2)' : 'brightness(1)',
+                    transition: 'filter 0.2s ease-out',
+                  }}
+                >
+                  {org.name}
+                </h3>
+              </div>
+            </div>
+
+            {/* Selection Indicator */}
+            {isSelected && (
+              <div 
+                className="absolute inset-0 rounded-2xl"
+                style={{
+                  border: '3px solid rgba(255,255,255,0.8)',
+                  boxShadow: '0 0 20px rgba(255,255,255,0.3), inset 0 0 20px rgba(255,255,255,0.1)',
+                }}
+              />
+            )}
+
+            {/* Hover Glow Effect */}
+            {isHovering && (
+              <div 
+                className="absolute inset-0 rounded-2xl pointer-events-none"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                  boxShadow: 'inset 0 0 30px rgba(255,255,255,0.2)',
+                }}
+              />
+            )}
+          </div>
+        </div>
+      </a>
+    </div>
+  );
+};
+
+const AppleTVOrganizationsShelf: React.FC = () => {
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const itemsPerView = 5;
+
   useEffect(() => {
     const fetchOrganizations = async () => {
       try {
@@ -103,15 +271,10 @@ const TeluguOrganizationsPreview: React.FC = () => {
         if (data && data.docs) {
           setOrganizations(data.docs);
         } else {
-          // Fallback to sample data if API is not available
           setOrganizations(sampleOrganizations);
         }
       } catch (error) {
-        console.error(
-          "Error fetching organizations, using sample data:",
-          error,
-        );
-        // Use sample data as fallback
+        console.error("Error fetching organizations, using sample data:", error);
         setOrganizations(sampleOrganizations);
       } finally {
         setIsLoading(false);
@@ -121,303 +284,141 @@ const TeluguOrganizationsPreview: React.FC = () => {
     fetchOrganizations();
   }, []);
 
-  // Create extended array for infinite scroll
-  const extendedOrganizations = React.useMemo(() => {
-    if (organizations.length === 0) return [];
-    
-    // Create enough duplicates to ensure smooth infinite scrolling
-    const duplicateCount = Math.max(2, Math.ceil(itemsPerView / organizations.length));
-    const extended = [];
-    
-    for (let i = 0; i < duplicateCount; i++) {
-      extended.push(...organizations.map((org, index) => ({
-        ...org,
-        id: `${org.id}-${i}-${index}`, // Unique ID for React keys
-        originalIndex: index
-      })));
-    }
-    
-    return extended;
-  }, [organizations, itemsPerView]);
-
-  // Auto-play functionality with infinite loop
+  // Auto-focus navigation
   useEffect(() => {
-    if (!isAutoPlaying || isHovered || organizations.length === 0) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (organizations.length === 0) return;
 
-    const interval = setInterval(() => {
-      setTranslateX(prev => {
-        const newTranslateX = prev + itemWidth;
-        
-        // Reset position when we've scrolled through one complete set
-        if (newTranslateX >= organizations.length * itemWidth) {
-          // Temporarily disable transition for seamless reset
-          setIsTransitioning(false);
-          setTimeout(() => {
-            setTranslateX(0);
-            setTimeout(() => setIsTransitioning(true), 50);
-          }, 50);
-          return prev;
-        }
-        
-        return newTranslateX;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isAutoPlaying, isHovered, organizations.length, itemWidth]);
-
-  const goToSlide = (index: number): void => {
-    setCurrentIndex(index);
-    setTranslateX(index * itemWidth);
-  };
-
-  const nextSlide = (): void => {
-    setTranslateX(prev => {
-      const newTranslateX = prev + itemWidth;
-      
-      if (newTranslateX >= organizations.length * itemWidth) {
-        setIsTransitioning(false);
-        setTimeout(() => {
-          setTranslateX(0);
-          setTimeout(() => setIsTransitioning(true), 50);
-        }, 300);
-        return prev;
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          setSelectedIndex(prev => Math.max(0, prev - 1));
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          setSelectedIndex(prev => Math.min(organizations.length - 1, prev + 1));
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (organizations[selectedIndex]?.website) {
+            window.open(organizations[selectedIndex].website, '_blank');
+          }
+          break;
       }
-      
-      return newTranslateX;
-    });
-  };
-
-  const prevSlide = (): void => {
-    setTranslateX(prev => {
-      if (prev <= 0) {
-        const lastPosition = (organizations.length - itemsPerView) * itemWidth;
-        setIsTransitioning(false);
-        setTimeout(() => {
-          setTranslateX(lastPosition);
-          setTimeout(() => setIsTransitioning(true), 50);
-        }, 50);
-        return prev;
-      }
-      
-      return prev - itemWidth;
-    });
-  };
-
-  const getBorderColor = (org: any, isSelected: boolean): string => {
-    if (!isSelected) return "transparent";
-    const colorMap: Record<string, string> = {
-      blue: "#3b82f6",
-      red: "#ef4444",
-      green: "#10b981",
-      purple: "#8b5cf6",
-      yellow: "#f59e0b",
-      forest: "#228B22",
-      orange: "#FF8C00",
-      cyan: "#00CED1",
-      teal: "#008B8B",
-      indigo: "#4B0082",
-      amber: "#FFBF00",
-      rose: "#FF69B4",
-      gray: "#708090",
-    };
-    return colorMap[org.color] || "#6b7280";
-  };
-
-  // Enhanced organization logo rendering with actual logos or color-coded backgrounds
-  const renderOrganizationLogo = (
-    org: any,
-    size: "medium" | "large" = "medium",
-  ): JSX.Element => {
-    const colorMap: Record<string, string> = {
-      blue: "from-blue-400 to-blue-600",
-      red: "from-red-400 to-red-600",
-      green: "from-green-400 to-green-600",
-      purple: "from-purple-400 to-purple-600",
-      yellow: "from-yellow-400 to-yellow-600",
-      forest: "from-green-600 to-green-800",
-      orange: "from-orange-400 to-orange-600",
-      cyan: "from-cyan-400 to-cyan-600",
-      teal: "from-teal-400 to-teal-600",
-      indigo: "from-indigo-400 to-indigo-600",
-      amber: "from-amber-400 to-amber-600",
-      rose: "from-rose-400 to-rose-600",
-      gray: "from-gray-400 to-gray-600",
     };
 
-    const gradient = colorMap[org.color] || "from-gray-300 to-gray-400";
-    const sizeClass = size === "large" ? "w-12 h-12" : "w-8 h-8";
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [organizations, selectedIndex]);
 
-    // Get acronym from organization name
-    const getAcronym = (name: string) => {
-      const words = name
-        .split(" ")
-        .filter(
-          (word) =>
-            ![
-              "of",
-              "and",
-              "the",
-              "in",
-              "for",
-              "to",
-              "at",
-              "by",
-              "from",
-              "with",
-              "&",
-            ].includes(word.toLowerCase()),
-        );
-      return words
-        .slice(0, 3)
-        .map((word) => word[0])
-        .join("")
-        .toUpperCase();
-    };
-
-    // If organization has a logo, try to use it, otherwise fall back to acronym
-    if (org.logo) {
-      return (
-        <div
-          className={`${sizeClass} rounded-full flex items-center justify-center bg-white shadow-lg border-2 border-white/20 overflow-hidden`}
-        >
-          <img
-            src={org.logo}
-            alt={`${org.name} logo`}
-            className="w-full h-full object-contain p-1"
-            onError={(e) => {
-              // Fallback to acronym if image fails to load
-              const target = e.target as HTMLImageElement;
-              const parent = target.parentElement;
-              if (parent) {
-                parent.innerHTML = `<div class="w-full h-full rounded-full flex items-center justify-center bg-gradient-to-br ${gradient} text-white font-bold text-${size === "large" ? "lg" : "sm"}">${getAcronym(org.name)}</div>`;
-              }
-            }}
-          />
-        </div>
-      );
+  const nextSlide = () => {
+    if (currentIndex < organizations.length - itemsPerView) {
+      setCurrentIndex(currentIndex + 1);
     }
+  };
 
-    // Fallback to acronym with gradient background
-    return (
-      <div
-        className={`${sizeClass} rounded-full flex items-center justify-center bg-gradient-to-br ${gradient} text-white font-bold shadow-lg text-${size === "large" ? "lg" : "sm"}`}
-      >
-        {getAcronym(org.name)}
-      </div>
-    );
+  const prevSlide = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
   };
 
   if (isLoading) {
     return (
-      <div className="max-w-6xl mx-auto py-16 text-center text-gray-500">
-        <div className="animate-pulse">Loading organizations...</div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white text-xl">Loading organizations...</div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8 rounded-xl">
-      <div className="mt-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
-              Organizations
-            </h3>
-          </div>
-          <button
-            onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-            className="bg-white/10 backdrop-blur-sm border border-white/20 p-3 rounded-xl transition-all duration-300 hover:scale-105 hover:bg-white/20"
-            aria-label={
-              isAutoPlaying
-                ? "Pause preview autoplay"
-                : "Resume preview autoplay"
-            }
-          >
-            {isAutoPlaying ? (
-              <div className="w-5 h-5 flex items-center justify-center text-white">
-                <div className="w-1.5 h-4 bg-current mr-1"></div>
-                <div className="w-1.5 h-4 bg-current"></div>
-              </div>
-            ) : (
-              <Play className="w-5 h-5 text-white" />
-            )}
-          </button>
+    <div 
+      className="min-h-screen text-white relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%)',
+      }}
+    >
+      {/* Background Pattern */}
+      <div 
+        className="absolute inset-0 opacity-5"
+        style={{
+          backgroundImage: `radial-gradient(circle at 25% 25%, white 1px, transparent 1px),
+                           radial-gradient(circle at 75% 75%, white 1px, transparent 1px)`,
+          backgroundSize: '50px 50px',
+        }}
+      />
+
+      <div className="relative z-10 px-8 py-16">
+          <h1 className="text-5xl font-light mb-2 tracking-wide">Organizations</h1>
+
+        {/* Navigation Instructions */}
+        <div className="mb-8 text-gray-500 text-sm">
+          Use arrow keys to navigate • Press Enter to visit
         </div>
 
-        <div
-          className="relative overflow-hidden"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          <div
-            className={`flex gap-4 ${isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
-            style={{
-              transform: `translateX(-${translateX}%)`,
-              width: `${(extendedOrganizations.length / itemsPerView) * 100}%`,
-            }}
-          >
-            {extendedOrganizations.map((org, index) => (
-              <button
-                key={org.id}
-                onClick={() => goToSlide(org.originalIndex)}
-                className="bg-white/10 backdrop-blur-sm rounded-xl p-5 transition-all duration-300 transform hover:scale-105 hover:shadow-xl border-2 group flex-shrink-0 hover:bg-white/20"
-                style={{
-                  width: `${100 / extendedOrganizations.length}%`,
-                  borderColor: getBorderColor(org, org.originalIndex === currentIndex),
-                }}
-              >
-                <div className="text-center">
-                  <div className="mb-3 group-hover:scale-110 transition-transform duration-300 flex justify-center">
-                    {renderOrganizationLogo(org, "large")}
-                  </div>
-                  <h4 className="text-white font-semibold text-sm mb-2 line-clamp-2 min-h-[2.5rem]">
-                    {org.name}
-                  </h4>
+        {/* Shelf Container */}
+        <div className="relative">
+          {/* Navigation Buttons */}
+          {currentIndex > 0 && (
+            <button
+              onClick={prevSlide}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-black/50 backdrop-blur-lg border border-white/10 p-3 rounded-full hover:bg-black/70 transition-all duration-300 -translate-x-4"
+              style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
+            >
+              <ChevronLeft className="w-6 h-6 text-white" />
+            </button>
+          )}
 
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="flex items-center space-x-1">
-                    </div>
-                  </div>
+          {currentIndex < organizations.length - itemsPerView && (
+            <button
+              onClick={nextSlide}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-black/50 backdrop-blur-lg border border-white/10 p-3 rounded-full hover:bg-black/70 transition-all duration-300 translate-x-4"
+              style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
+            >
+              <ChevronRight className="w-6 h-6 text-white" />
+            </button>
+          )}
+
+          {/* Cards Grid */}
+          <div className="overflow-hidden">
+            <div 
+              className="flex transition-transform duration-500 ease-out"
+              style={{
+                transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`,
+                width: `${(organizations.length / itemsPerView) * 100}%`,
+              }}
+            >
+              {organizations.map((org, index) => (
+                <div 
+                  key={org.id}
+                  className="flex-shrink-0"
+                  style={{ width: `${100 / itemsPerView}%` }}
+                  onClick={() => setSelectedIndex(index)}
+                >
+                  <AppleTVCard 
+                    org={org} 
+                    isSelected={selectedIndex === index}
+                  />
                 </div>
-              </button>
-            ))}
+              ))}
+            </div>
           </div>
-
-          {/* Navigation arrows */}
-          <button
-            onClick={prevSlide}
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 p-3 rounded-full transition-all duration-300 hover:scale-110 z-10 -ml-2"
-            aria-label="Previous items"
-          >
-            <ChevronLeft className="w-4 h-4 text-white" />
-          </button>
-          <button
-            onClick={nextSlide}
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 p-3 rounded-full transition-all duration-300 hover:scale-110 z-10 -mr-2"
-            aria-label="Next items"
-          >
-            <ChevronRight className="w-4 h-4 text-white" />
-          </button>
         </div>
 
-        {/* Pagination dots - only show if we have more than itemsPerView organizations */}
+        {/* Page Indicators */}
         {organizations.length > itemsPerView && (
-          <div className="flex justify-center mt-6 space-x-2">
-            {Array.from({ length: Math.min(5, Math.ceil(organizations.length / itemsPerView)) }).map((_, index) => (
+          <div className="flex justify-center mt-12 space-x-2">
+            {Array.from({ 
+              length: Math.ceil((organizations.length - itemsPerView + 1)) 
+            }).map((_, index) => (
               <button
                 key={index}
-                onClick={() => {
-                  setIsAutoPlaying(false);
-                  goToSlide(index * itemsPerView);
-                  setTimeout(() => setIsAutoPlaying(true), 10000);
-                }}
-                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                  Math.floor(currentIndex / itemsPerView) === index
-                    ? "bg-white scale-125 shadow-lg"
-                    : "bg-white/40 hover:bg-white/60"
+                onClick={() => setCurrentIndex(index)}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  currentIndex === index
+                    ? "bg-white shadow-lg shadow-white/30"
+                    : "bg-white/30 hover:bg-white/50"
                 }`}
-                aria-label={`Go to page ${index + 1}`}
               />
             ))}
           </div>
@@ -427,4 +428,4 @@ const TeluguOrganizationsPreview: React.FC = () => {
   );
 };
 
-export default TeluguOrganizationsPreview;
+export default AppleTVOrganizationsShelf;

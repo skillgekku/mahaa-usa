@@ -1,288 +1,131 @@
 'use client'
-
-import { useTheme } from '@/app/(frontend)/hooks/useTheme'
 import { SocialIcon } from 'react-social-icons'
 
-interface HeaderProps {
-  onScheduleClick: () => void
-  isPiPActive?: boolean
-}
+// Star positions data for cleaner management
+const starPositions = [
+  // Top row stars
+  { top: '0.5rem', left: '2rem', size: 'text-lg', delay: '0s' },
+  { top: '0.25rem', left: '5rem', size: 'text-sm', delay: '0.5s' },
+  { top: '0.75rem', left: '8rem', size: 'text-lg', delay: '1s' },
+  { top: '0.25rem', left: '11rem', size: 'text-sm', delay: '1.5s' },
+  { top: '0.5rem', left: '14rem', size: 'text-lg', delay: '2s' },
+  { top: '0.75rem', left: '17rem', size: 'text-sm', delay: '0.3s' },
+  { top: '0.25rem', left: '20rem', size: 'text-lg', delay: '0.8s' },
+  { top: '0.5rem', left: '24rem', size: 'text-sm', delay: '1.3s' },
+  { top: '0.75rem', right: '24rem', size: 'text-lg', delay: '1.8s' },
+  { top: '0.25rem', right: '20rem', size: 'text-sm', delay: '0.2s' },
+  { top: '0.5rem', right: '17rem', size: 'text-lg', delay: '0.7s' },
+  { top: '0.75rem', right: '14rem', size: 'text-sm', delay: '1.2s' },
+  { top: '0.25rem', right: '11rem', size: 'text-lg', delay: '1.7s' },
+  { top: '0.5rem', right: '8rem', size: 'text-sm', delay: '0.4s' },
+  { top: '0.75rem', right: '5rem', size: 'text-lg', delay: '0.9s' },
+  { top: '0.25rem', right: '2rem', size: 'text-sm', delay: '1.4s' },
+  
+  // Bottom row stars
+  { bottom: '0.5rem', left: '3rem', size: 'text-sm', delay: '0.6s' },
+  { bottom: '0.25rem', left: '6rem', size: 'text-lg', delay: '1.1s' },
+  { bottom: '0.75rem', left: '9rem', size: 'text-sm', delay: '1.6s' },
+  { bottom: '0.25rem', left: '12rem', size: 'text-lg', delay: '0.1s' },
+  { bottom: '0.5rem', left: '15rem', size: 'text-sm', delay: '0.5s' },
+  { bottom: '0.75rem', left: '18rem', size: 'text-lg', delay: '1.0s' },
+  { bottom: '0.25rem', left: '21rem', size: 'text-sm', delay: '1.5s' },
+  { bottom: '0.5rem', right: '21rem', size: 'text-lg', delay: '2.0s' },
+  { bottom: '0.75rem', right: '18rem', size: 'text-sm', delay: '0.3s' },
+  { bottom: '0.25rem', right: '15rem', size: 'text-lg', delay: '0.8s' },
+  { bottom: '0.5rem', right: '12rem', size: 'text-sm', delay: '1.3s' },
+  { bottom: '0.75rem', right: '9rem', size: 'text-lg', delay: '1.8s' },
+  { bottom: '0.25rem', right: '6rem', size: 'text-sm', delay: '0.2s' },
+  { bottom: '0.5rem', right: '3rem', size: 'text-lg', delay: '0.7s' }
+]
 
-export default function Header({ onScheduleClick, isPiPActive }: HeaderProps) {
-  const { isDarkMode, toggleTheme } = useTheme()
+const socialLinks = [
+  {
+    url: "https://www.youtube.com/@mahaanewsusa",
+    platform: "youtube"
+  },
+  {
+    url: "https://www.instagram.com/mahaausa/",
+    platform: "instagram"
+  }
+]
 
+const StarField = () => (
+  <div className="absolute inset-0 opacity-30 pointer-events-none">
+    {starPositions.map((star, index) => (
+      <div
+        key={index}
+        className={`absolute text-white ${star.size} animate-pulse`}
+        style={{
+          top: star.top,
+          bottom: star.bottom,
+          left: star.left,
+          right: star.right,
+          animationDelay: star.delay,
+          animationDuration: '2s',
+        }}
+      >
+        ★
+      </div>
+    ))}
+  </div>
+)
+
+const Logo = () => (
+  <h1 
+    className="text-3xl font-bold tracking-widest uppercase text-white relative z-10"
+    style={{
+      fontFamily: "sans-serif",
+      fontWeight: 600,
+      letterSpacing: '3px',
+      textShadow: '0 2px 4px rgba(0,0,0,0.5), 0 0 12px rgba(255,255,255,0.2)',
+      animation: 'subtleGlow 3s ease-in-out infinite alternate',
+    }}
+  >
+    Mahaa NEWS USA
+  </h1>
+)
+
+const SocialIcons = () => (
+  <div className="flex items-center space-x-3 relative z-10">
+    {socialLinks.map((social, index) => (
+      <SocialIcon
+        key={index}
+        url={social.url}
+        style={{ height: 32, width: 32 }}
+        className="hover:scale-110 transition-transform duration-200 hover:drop-shadow-lg"
+        target="_blank"
+        rel="noopener noreferrer"
+      />
+    ))}
+  </div>
+)
+
+export default function Header() {
   return (
     <>
       <style jsx>{`
-        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&family=Michroma:wght@400&display=swap');
-
-        .futuristic-glow {
-          animation: subtleGlow 3s ease-in-out infinite alternate;
-        }
-
-        .star-twinkle {
-          animation: twinkle 2s ease-in-out infinite alternate;
-        }
-
-        @keyframes twinkle {
-          from {
-            opacity: 0.3;
-            transform: scale(1);
-          }
-          to {
-            opacity: 0.8;
-            transform: scale(1.1);
-          }
-        }
 
         @keyframes subtleGlow {
           from {
-            text-shadow:
-              0 2px 4px rgba(0, 0, 0, 0.3),
-              0 0 8px rgba(255, 255, 255, 0.1);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 8px rgba(255, 255, 255, 0.1);
           }
           to {
-            text-shadow:
-              0 2px 8px rgba(0, 0, 0, 0.4),
-              0 0 12px rgba(255, 255, 255, 0.2);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 16px rgba(255, 255, 255, 0.3);
           }
         }
       `}</style>
 
       <nav
-        className="text-white py-4 px-8 shadow-2xl relative overflow-hidden"
+        className="relative overflow-hidden text-white py-1 px-4 shadow-2xl"
         style={{
-          background:
-            'linear-gradient(135deg, #002868 0%, #1e3a8a 25%, #bf0a30 50%, #dc2626 75%, #002868 100%)',
+          background: 'linear-gradient(135deg, #002868 0%, #1e3a8a 25%, #bf0a30 50%, #dc2626 75%, #002868 100%)',
         }}
       >
-        {/* Stars pattern overlay */}
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-2 left-8 text-white text-lg star-twinkle">★</div>
-          <div
-            className="absolute top-1 left-20 text-white text-sm star-twinkle"
-            style={{ animationDelay: '0.5s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute top-3 left-32 text-white text-lg star-twinkle"
-            style={{ animationDelay: '1s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute top-1 left-44 text-white text-sm star-twinkle"
-            style={{ animationDelay: '1.5s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute top-2 left-56 text-white text-lg star-twinkle"
-            style={{ animationDelay: '2s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute top-3 left-68 text-white text-sm star-twinkle"
-            style={{ animationDelay: '0.3s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute top-1 left-80 text-white text-lg star-twinkle"
-            style={{ animationDelay: '0.8s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute top-2 left-96 text-white text-sm star-twinkle"
-            style={{ animationDelay: '1.3s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute top-3 right-96 text-white text-lg star-twinkle"
-            style={{ animationDelay: '1.8s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute top-1 right-80 text-white text-sm star-twinkle"
-            style={{ animationDelay: '0.2s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute top-2 right-68 text-white text-lg star-twinkle"
-            style={{ animationDelay: '0.7s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute top-3 right-56 text-white text-sm star-twinkle"
-            style={{ animationDelay: '1.2s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute top-1 right-44 text-white text-lg star-twinkle"
-            style={{ animationDelay: '1.7s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute top-2 right-32 text-white text-sm star-twinkle"
-            style={{ animationDelay: '0.4s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute top-3 right-20 text-white text-lg star-twinkle"
-            style={{ animationDelay: '0.9s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute top-1 right-8 text-white text-sm star-twinkle"
-            style={{ animationDelay: '1.4s' }}
-          >
-            ★
-          </div>
-
-          {/* Second row of stars */}
-          <div
-            className="absolute bottom-2 left-12 text-white text-sm star-twinkle"
-            style={{ animationDelay: '0.6s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute bottom-1 left-24 text-white text-lg star-twinkle"
-            style={{ animationDelay: '1.1s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute bottom-3 left-36 text-white text-sm star-twinkle"
-            style={{ animationDelay: '1.6s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute bottom-1 left-48 text-white text-lg star-twinkle"
-            style={{ animationDelay: '0.1s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute bottom-2 left-60 text-white text-sm star-twinkle"
-            style={{ animationDelay: '0.5s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute bottom-3 left-72 text-white text-lg star-twinkle"
-            style={{ animationDelay: '1.0s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute bottom-1 left-84 text-white text-sm star-twinkle"
-            style={{ animationDelay: '1.5s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute bottom-2 right-84 text-white text-lg star-twinkle"
-            style={{ animationDelay: '2.0s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute bottom-3 right-72 text-white text-sm star-twinkle"
-            style={{ animationDelay: '0.3s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute bottom-1 right-60 text-white text-lg star-twinkle"
-            style={{ animationDelay: '0.8s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute bottom-2 right-48 text-white text-sm star-twinkle"
-            style={{ animationDelay: '1.3s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute bottom-3 right-36 text-white text-lg star-twinkle"
-            style={{ animationDelay: '1.8s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute bottom-1 right-24 text-white text-sm star-twinkle"
-            style={{ animationDelay: '0.2s' }}
-          >
-            ★
-          </div>
-          <div
-            className="absolute bottom-2 right-12 text-white text-lg star-twinkle"
-            style={{ animationDelay: '0.7s' }}
-          >
-            ★
-          </div>
-        </div>
-
+        <StarField />
+        
         <div className="container mx-auto flex items-center justify-between relative z-10">
-          <h1
-            className="text-3xl font-bold tracking-wide futuristic-glow"
-            style={{
-              fontFamily: "'Rajdhani', sans-serif",
-              fontSize: '2.5rem',
-              fontWeight: 700,
-              letterSpacing: '4px',
-              color: '#ffffff',
-              textShadow: '0 2px 4px rgba(0,0,0,0.5), 0 0 8px rgba(255,255,255,0.1)',
-              textTransform: 'uppercase',
-              fontStretch: 'condensed',
-            }}
-          >
-            Mahaa NEWS USA
-          </h1>
-          <div className="flex items-center space-x-4">
-            {isPiPActive && (
-              <div className="flex items-center space-x-2 bg-blue-600 px-3 py-1 rounded-full">
-                <div className="w-2 h-2 bg-blue-300 rounded-full animate-pulse"></div>
-                <span className="text-xs font-medium">PiP Active</span>
-              </div>
-            )}
-
-            <div className="flex items-center space-x-2">
-              {/* Contact & Social */}
-             <div className="text-center md:text-right">
-  <div className="flex justify-center md:justify-end items-center space-x-3 mb-3">
-    <SocialIcon
-      url="https://www.youtube.com/@mahaanewsusa"
-      style={{ height: 32, width: 32 }}
-      className="hover:scale-110 transition-transform"
-      target="_blank"
-      rel="noopener noreferrer"
-    />
-    <SocialIcon
-      url="https://www.instagram.com/mahaausa/"
-      style={{ height: 32, width: 32 }}
-      className="hover:scale-110 transition-transform"
-      target="_blank"
-      rel="noopener noreferrer"
-    />
-  </div>
-</div>
-            </div>
-          </div>
+          <Logo />
+          <SocialIcons />
         </div>
       </nav>
     </>

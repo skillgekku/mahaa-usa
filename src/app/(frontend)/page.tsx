@@ -9,13 +9,11 @@ import Footer from './components/ui/Footer'
 import VideoPlayer from './components/channel/VideoPlayer'
 import ConferencePlaylist from './components/channel/ConferencePlaylist'
 import ConferenceCarousel from './components/channel/ConferenceCarousel'
-import { Play, Calendar, Youtube, Users, Tv, Clock, Star } from 'lucide-react'
 
 export default function HomePage() {
   const { isDarkMode } = useTheme()
   const [currentView, setCurrentView] = useState<ViewMode>('home')
   const [selectedChannel, setSelectedChannel] = useState<ChannelConfig | null>(null)
-  const [isPiPActive, setIsPiPActive] = useState(false)
   const [selectedYouTubeVideoId, setSelectedYouTubeVideoId] = useState<string | null>(null)
 
   const theme = THEME_CLASSES[isDarkMode ? 'dark' : 'light']
@@ -24,12 +22,6 @@ export default function HomePage() {
     setSelectedChannel(conference)
     setCurrentView('usa-playlist')
   }
-
-  const handlePlayMahaaNews = () => {
-    setSelectedChannel(MAHAA_NEWS_CHANNEL)
-    setCurrentView('player')
-  }
-
   const handleBackToHome = () => {
     setCurrentView('home')
     setSelectedChannel(null)
@@ -40,8 +32,7 @@ export default function HomePage() {
     setSelectedChannel(null)
     setSelectedYouTubeVideoId(null)
     setCurrentView('home')
-    setIsPiPActive(false)
-  }
+   }
 
   const handlePlayYouTubeVideo = (videoId: string) => {
     setSelectedYouTubeVideoId(videoId)
@@ -74,11 +65,10 @@ export default function HomePage() {
 
   return (
     <div className={`flex flex-col min-h-screen ${theme.body}`}>
-      <Header onScheduleClick={() => setCurrentView('schedule')} isPiPActive={isPiPActive} />
+      <Header/>
 
       <main className="flex-grow px-6 py-8">
         <div className="container mx-auto max-w-7xl">
-          {/* Conference Carousel Section */}
           <ConferenceCarousel
             conferences={CONFERENCES}
             onConferenceSelect={handleConferenceSelect}
@@ -93,7 +83,6 @@ export default function HomePage() {
           channel={getModifiedChannel()!}
           isOpen={currentView === 'player'}
           onClose={handleClosePlayer}
-          onPiPChange={setIsPiPActive}
         />
       )}
     </div>

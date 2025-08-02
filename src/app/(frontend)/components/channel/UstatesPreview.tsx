@@ -171,7 +171,7 @@ const USStatesPreview: React.FC = () => {
   const [isTransitioning, setIsTransitioning] = useState<boolean>(true);
   
   const itemsPerView = 4;
-  const itemWidth = 5 / itemsPerView; // Percentage width per item
+  const itemWidth = 100 / itemsPerView; // Percentage width per item
 
   // Fetch state data from Payload CMS API
   useEffect(() => {
@@ -200,7 +200,7 @@ const USStatesPreview: React.FC = () => {
     if (states.length === 0) return [];
     
     // Create enough duplicates to ensure smooth infinite scrolling
-    const duplicateCount = Math.max(2, Math.ceil(itemsPerView / states.length));
+    const duplicateCount = Math.max(3, Math.ceil(itemsPerView * 2 / states.length));
     const extended = [];
     
     for (let i = 0; i < duplicateCount; i++) {
@@ -228,14 +228,14 @@ const USStatesPreview: React.FC = () => {
           setIsTransitioning(false);
           setTimeout(() => {
             setTranslateX(0);
-            setTimeout(() => setIsTransitioning(true), 50);
+            setTimeout(() => setIsTransitioning(true), 100);
           }, 50);
           return prev;
         }
         
         return newTranslateX;
       });
-    }, 500);
+    }, 2000); // Slower auto-scroll for better UX
 
     return () => clearInterval(interval);
   }, [isAutoPlaying, isHovered, states.length, itemWidth]);
@@ -253,7 +253,7 @@ const USStatesPreview: React.FC = () => {
         setIsTransitioning(false);
         setTimeout(() => {
           setTranslateX(0);
-          setTimeout(() => setIsTransitioning(true), 50);
+          setTimeout(() => setIsTransitioning(true), 100);
         }, 300);
         return prev;
       }
@@ -269,19 +269,13 @@ const USStatesPreview: React.FC = () => {
         setIsTransitioning(false);
         setTimeout(() => {
           setTranslateX(lastPosition);
-          setTimeout(() => setIsTransitioning(true), 50);
+          setTimeout(() => setIsTransitioning(true), 100);
         }, 50);
         return prev;
       }
       
       return prev - itemWidth;
     });
-  };
-
-  const theme = {
-    title: "text-gray-800",
-    description: "text-gray-600",
-    card: "bg-white shadow-md",
   };
 
   // Generate placeholder image URL
@@ -303,18 +297,26 @@ const USStatesPreview: React.FC = () => {
     return `https://via.placeholder.com/400x250/${color}/FFFFFF?text=${encodeURIComponent(state.name)}`;
   };
 
+  // Color mapping for event badges
+  const getEventBadgeColor = (eventCount: number): string => {
+    if (eventCount >= 200) return "bg-red-500";
+    if (eventCount >= 150) return "bg-orange-500";
+    if (eventCount >= 100) return "bg-yellow-500";
+    if (eventCount >= 50) return "bg-green-500";
+    return "bg-blue-500";
+  };
+
   // Updated rendering function with placeholder image
   const renderStateImage = (state: any): JSX.Element => {
     const imageUrl = state.image || getPlaceholderImage(state);
 
     return (
-      <div className="w-full h-32 mb-3 overflow-hidden rounded-lg bg-gray-100">
+      <div className="relative w-full h-40 mb-4 overflow-hidden rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 shadow-inner">
         <img
           src={imageUrl}
           alt={`${state.name} placeholder`}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+          className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110 group-hover:brightness-110"
           onError={(e) => {
-            // Fallback to a colored div if image fails to load
             const target = e.target as HTMLImageElement;
             target.style.display = "none";
             if (target.nextElementSibling) {
@@ -323,10 +325,18 @@ const USStatesPreview: React.FC = () => {
           }}
         />
         <div
-          className="w-full h-full hidden items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500 text-white font-bold text-2xl"
+          className="absolute inset-0 hidden items-center justify-center bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 text-white font-bold text-3xl tracking-wider"
           style={{ display: "none" }}
         >
           {state.name.slice(0, 2).toUpperCase()}
+        </div>
+        
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Event count badge */}
+        <div className={`absolute top-3 right-3 ${getEventBadgeColor(state.events)} text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow-lg backdrop-blur-sm`}>
+          {state.events}
         </div>
       </div>
     );
@@ -334,114 +344,146 @@ const USStatesPreview: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="max-w-6xl mx-auto py-16 text-center text-gray-500">
-        Loading states...
+      <div className="max-w-7xl mx-auto py-20 text-center">
+        <div className="inline-flex items-center justify-center space-x-2 text-white">
+          <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+          <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+          <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          <span className="ml-3 text-lg font-medium">Loading states...</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-8 rounded-2xl">
-      <div className="mt-8">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl text-white md:text-2xl font-bold">
-            Happenings by State
-          </h3>
-          <button
-            onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-            className="bg-white/10 backdrop-blur-sm border border-white/20 p-3 rounded-xl transition-all duration-300 hover:scale-105 hover:bg-white/20"
-            aria-label={
-              isAutoPlaying
-                ? "Pause preview autoplay"
-                : "Resume preview autoplay"
-            }
-          >
-            {isAutoPlaying ? (
-              <div className="w-4 h-4 flex items-center justify-center text-white">
-                <div className="w-1 h-3 bg-current mr-0.5"></div>
-                <div className="w-1 h-3 bg-current"></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-8">
+      <div className="max-w-7xl mx-auto">
+      
+
+        {/* Main Preview Section */}
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+                <MapPin className="w-6 h-6 text-white" />
               </div>
-            ) : (
-              <Play className="w-4 h-4 text-white" />
-            )}
-          </button>
-        </div>
-
-        <div
-          className="relative overflow-hidden"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          <div
-            className={`flex gap-4 ${isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
-            style={{
-              transform: `translateX(-${translateX}%)`,
-              width: `${(extendedStates.length / itemsPerView) * 100}%`,
-            }}
-          >
-            {extendedStates.map((state, index) => (
-              <button
-                key={state.id}
-                onClick={() => goToSlide(state.originalIndex)}
-                className={`${theme.card} rounded-xl p-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg group flex-shrink-0 ${
-                  state.originalIndex === currentIndex
-                    ? "ring-2 ring-blue-500 ring-opacity-50"
-                    : ""
-                }`}
-                style={{
-                  width: `${100 / extendedStates.length}%`,
-                }}
-              >
-                <div className="text-center">
-                  {renderStateImage(state)}
-                  <h4 className={`${theme.title} font-semibold text-sm mb-1 line-clamp-2`}>
-                    {state.name}
-                  </h4>
-                 
-                 
+              <div>
+                <h3 className="text-2xl md:text-3xl font-bold text-white mb-1">
+                  Happenings by State
+                </h3>
+               
+              </div>
+            </div>
+            
+            <button
+              onClick={() => setIsAutoPlaying(!isAutoPlaying)}
+              className="group bg-white/10 backdrop-blur-sm border border-white/20 p-4 rounded-xl transition-all duration-300 hover:scale-105 hover:bg-white/20 hover:border-white/30 shadow-lg"
+              aria-label={
+                isAutoPlaying
+                  ? "Pause preview autoplay"
+                  : "Resume preview autoplay"
+              }
+            >
+              {isAutoPlaying ? (
+                <div className="w-5 h-5 flex items-center justify-center text-white">
+                  <div className="w-1.5 h-4 bg-current mr-1 rounded-sm group-hover:bg-blue-300 transition-colors"></div>
+                  <div className="w-1.5 h-4 bg-current rounded-sm group-hover:bg-blue-300 transition-colors"></div>
                 </div>
-              </button>
-            ))}
+              ) : (
+                <Play className="w-5 h-5 text-white group-hover:text-blue-300 transition-colors" />
+              )}
+            </button>
           </div>
 
-          {/* Navigation arrows */}
-          <button
-            onClick={prevSlide}
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 p-3 rounded-full transition-all duration-300 hover:scale-110 z-10 -ml-2"
-            aria-label="Previous preview items"
+          <div
+            className="relative overflow-hidden rounded-2xl"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
           >
-            <ChevronLeft className="w-4 h-4 text-white" />
-          </button>
-          <button
-            onClick={nextSlide}
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 p-3 rounded-full transition-all duration-300 hover:scale-110 z-10 -mr-2"
-            aria-label="Next preview items"
-          >
-            <ChevronRight className="w-4 h-4 text-white" />
-          </button>
+            <div
+              className={`flex gap-6 ${isTransitioning ? 'transition-transform duration-700 ease-out' : ''}`}
+              style={{
+                transform: `translateX(-${translateX}%)`,
+                width: `${(extendedStates.length / itemsPerView) * 100}%`,
+              }}
+            >
+              {extendedStates.map((state, index) => (
+                <button
+                  key={state.id}
+                  onClick={() => goToSlide(state.originalIndex)}
+                  className={`group bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:bg-white/20 hover:border-white/30 flex-shrink-0 ${
+                    state.originalIndex === currentIndex
+                      ? "ring-2 ring-blue-400 ring-opacity-70 shadow-lg shadow-blue-500/25"
+                      : ""
+                  }`}
+                  style={{
+                    width: `calc(${100 / extendedStates.length}% - 1.5rem)`,
+                    minWidth: '280px'
+                  }}
+                >
+                  <div className="text-center">
+                    {renderStateImage(state)}
+                    
+                    <div className="space-y-3">
+                      <h4 className="text-white font-bold text-lg leading-tight group-hover:text-blue-300 transition-colors duration-300">
+                        {state.name}
+                      </h4>
+                      
+                     
+                      
+                      <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+                        <div 
+                          className={`h-full ${getEventBadgeColor(state.events)} transition-all duration-500 rounded-full`}
+                          style={{ width: `${Math.min((state.events / 250) * 100, 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Enhanced Navigation arrows */}
+            <button
+              onClick={prevSlide}
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/25 hover:border-white/40 p-4 rounded-full transition-all duration-300 hover:scale-110 z-10 shadow-xl group"
+              aria-label="Previous preview items"
+            >
+              <ChevronLeft className="w-5 h-5 text-white group-hover:text-blue-300 transition-colors" />
+            </button>
+            <button
+              onClick={nextSlide}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/25 hover:border-white/40 p-4 rounded-full transition-all duration-300 hover:scale-110 z-10 shadow-xl group"
+              aria-label="Next preview items"
+            >
+              <ChevronRight className="w-5 h-5 text-white group-hover:text-blue-300 transition-colors" />
+            </button>
+          </div>
+
+          {/* Enhanced Pagination dots */}
+          {states.length > itemsPerView && (
+            <div className="flex justify-center mt-8 space-x-3">
+              {Array.from({ length: Math.min(5, Math.ceil(states.length / itemsPerView)) }).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setIsAutoPlaying(false);
+                    goToSlide(index * itemsPerView);
+                    setTimeout(() => setIsAutoPlaying(true), 10000);
+                  }}
+                  className={`transition-all duration-400 rounded-full ${
+                    Math.floor(currentIndex / itemsPerView) === index
+                      ? "w-8 h-3 bg-white shadow-lg shadow-white/25"
+                      : "w-3 h-3 bg-white/40 hover:bg-white/70 hover:scale-125"
+                  }`}
+                  aria-label={`Go to page ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Pagination dots - only show if we have more than itemsPerView states */}
-        {states.length > itemsPerView && (
-          <div className="flex justify-center mt-4 space-x-2">
-            {Array.from({ length: Math.min(5, Math.ceil(states.length / itemsPerView)) }).map((_, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  setIsAutoPlaying(false);
-                  goToSlide(index * itemsPerView);
-                  setTimeout(() => setIsAutoPlaying(true), 10000);
-                }}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  Math.floor(currentIndex / itemsPerView) === index
-                    ? "bg-white scale-125 shadow-lg"
-                    : "bg-white/40 hover:bg-white/60"
-                }`}
-                aria-label={`Go to page ${index + 1}`}
-              />
-            ))}
-          </div>
-        )}
+      
       </div>
     </div>
   );
