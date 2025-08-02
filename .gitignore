@@ -10,7 +10,8 @@ testing
 
 next.js
 
-/.next/ /out/
+/.next/ 
+/out/
 
 production
 
@@ -66,6 +67,5 @@ IDEs and editors
 
 .idea/ *.suo .ntvs*.njsproj *.sln *.sw?
 node_modules
-
 
 /.next
