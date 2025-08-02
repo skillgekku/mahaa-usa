@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { ChannelConfig } from "@/app/(frontend)/lib/types";
 import { useTheme } from "@/app/(frontend)/hooks/useTheme";
 import { THEME_CLASSES } from "@/app/(frontend)/lib/constants";
 import USStatesPreview from "@/app/(frontend)/components/channel/UstatesPreview";
@@ -10,12 +9,7 @@ import Image from "next/image";
 import NewsTicker from "@/app/(frontend)/components/channel/NewsTicker";
 import NewsSection from "@/app/(frontend)/components/channel/Articles";
 
-interface LandingPageProps {
-  conferences: ChannelConfig[];
-  onConferenceSelect: (conference: ChannelConfig) => void;
-}
-
-export default function LandingPage({ conferences }: LandingPageProps) {
+export default function LandingPage({  }) {
   const { isDarkMode } = useTheme();
   const theme = THEME_CLASSES[isDarkMode ? "dark" : "light"];
 
