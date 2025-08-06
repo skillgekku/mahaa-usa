@@ -11,6 +11,7 @@ export default function LandingPage({  }) {
 
   
   return (
+    <>
     <div className="w-full max-w-6xl mx-auto mb-12">
       {/* Main Content Layout */}
       <div className="flex items-stretch gap-4">
@@ -44,5 +45,8 @@ export default function LandingPage({  }) {
       <USStatesPreview />
       <TeluguNewsUI/>
     </div>
+    <div>
+    </div>
+    </>
   );
 }
