@@ -61,12 +61,6 @@ export default function AutoYouTubePlayer({
   onClose,
   conferences = [],
   currentIndex,
-  onNextSlide,
-  onPrevSlide,
-  isAutoPlaying,
-  onToggleAutoPlay,
-  renderConferenceLogo,
-  handleConferenceSelect,
 }: AutoYouTubePlayerProps) {
   // YouTube Player State
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);

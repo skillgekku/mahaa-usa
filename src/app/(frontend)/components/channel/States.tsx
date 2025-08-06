@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, MoreHorizontal, Pause, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 import { sampleStates } from "../../lib/constants";
 
 // State interface matching Payload collection structure

@@ -1,18 +1,15 @@
 "use client";
 
 import React from "react";
-import { useTheme } from "@/app/(frontend)/hooks/useTheme";
-import { THEME_CLASSES } from "@/app/(frontend)/lib/constants";
-import USStatesPreview from "@/app/(frontend)/components/channel/UstatesPreview";
+import USStatesPreview from "@/app/(frontend)/components/channel/States";
 import Organisations from "@/app/(frontend)/components/channel/Organisations";
 import Image from "next/image";
 import NewsTicker from "@/app/(frontend)/components/channel/NewsTicker";
-import NewsSection from "@/app/(frontend)/components/channel/Articles";
-
+import TeluguNewsUI from "@/app/(frontend)/components/channel/NewsLinks";
 export default function LandingPage({  }) {
-  const { isDarkMode } = useTheme();
-  const theme = THEME_CLASSES[isDarkMode ? "dark" : "light"];
 
+
+  
   return (
     <div className="w-full max-w-6xl mx-auto mb-12">
       {/* Main Content Layout */}
@@ -45,7 +42,7 @@ export default function LandingPage({  }) {
 
       <Organisations />
       <USStatesPreview />
-      <NewsSection />
+      <TeluguNewsUI/>
     </div>
   );
 }

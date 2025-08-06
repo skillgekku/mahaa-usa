@@ -1,16 +1,10 @@
 'use client'
-
-import { useTheme } from '@/app/(frontend)/hooks/useTheme'
-import { THEME_CLASSES } from '@/app/(frontend)/lib/constants'
-
 export default function Footer() {
-  const { isDarkMode } = useTheme()
-  const theme = THEME_CLASSES[isDarkMode ? 'dark' : 'light']
 
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className={`${theme.footer} text-center py-8 border-t`}>
+    <footer className={`text-center py-8 border-t`}>
       <div className="container mx-auto px-6">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">

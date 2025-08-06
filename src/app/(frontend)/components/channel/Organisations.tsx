@@ -70,13 +70,22 @@ const AppleTVOrganizationsShelf: React.FC = () => {
   const [itemsPerView, setItemsPerView] = useState(5);
   const [isAutoScrolling, setIsAutoScrolling] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(true);
   
   const autoScrollRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const CARD_WIDTH = 260;
   const CARD_GAP = 20;
-  const AUTO_SCROLL_INTERVAL = 3000; // 3 seconds
+  const AUTO_SCROLL_INTERVAL = 1000; // 3 seconds
+
+  // Create extended array for infinite scroll effect
+  const extendedOrganizations = organizations.length > 0 
+    ? [...organizations, ...organizations, ...organizations] 
+    : [];
+  
+  const originalLength = organizations.length;
+  const startIndex = originalLength; // Start from the middle copy
 
   // Fetch organizations
   useEffect(() => {
@@ -86,7 +95,7 @@ const AppleTVOrganizationsShelf: React.FC = () => {
         const data = await res.json();
         
         if (data?.docs) {
-          setOrganizations(data.docs);
+          setOrganizations(SAMPLE_ORGANIZATIONS);
         } else {
           setOrganizations(SAMPLE_ORGANIZATIONS);
         }
@@ -100,6 +109,13 @@ const AppleTVOrganizationsShelf: React.FC = () => {
 
     fetchOrganizations();
   }, []);
+
+  // Initialize starting position
+  useEffect(() => {
+    if (organizations.length > 0 && currentIndex === 0) {
+      setCurrentIndex(startIndex);
+    }
+  }, [organizations.length, startIndex]);
 
   useEffect(() => {
     const updateItemsPerView = () => {
@@ -125,13 +141,7 @@ const AppleTVOrganizationsShelf: React.FC = () => {
     }
 
     autoScrollRef.current = setInterval(() => {
-      setCurrentIndex(prevIndex => {
-        // If we're at the end, loop back to the beginning
-        if (prevIndex >= organizations.length - itemsPerView) {
-          return 0;
-        }
-        return prevIndex + 1;
-      });
+      handleNext();
     }, AUTO_SCROLL_INTERVAL);
 
     return () => {
@@ -139,7 +149,22 @@ const AppleTVOrganizationsShelf: React.FC = () => {
         clearInterval(autoScrollRef.current);
       }
     };
-  }, [isAutoScrolling, isPaused, organizations.length, itemsPerView]);
+  }, [isAutoScrolling, isPaused, organizations.length]);
+
+  // Handle infinite scroll reset
+  const handleTransitionEnd = () => {
+    setIsTransitioning(false);
+    
+    // Reset to middle section if we're at the boundaries
+    if (currentIndex >= originalLength * 2) {
+      setCurrentIndex(currentIndex - originalLength);
+    } else if (currentIndex < originalLength) {
+      setCurrentIndex(currentIndex + originalLength);
+    }
+    
+    // Re-enable transitions after a brief delay
+    setTimeout(() => setIsTransitioning(true), 50);
+  };
 
   // Pause auto-scroll on hover
   const handleMouseEnter = () => {
@@ -150,41 +175,34 @@ const AppleTVOrganizationsShelf: React.FC = () => {
     setIsPaused(false);
   };
 
-  const canGoLeft = currentIndex > 0;
-  const canGoRight = currentIndex < organizations.length - itemsPerView;
-
   const handlePrevious = () => {
-    if (canGoLeft) {
-      setCurrentIndex(prev => Math.max(0, prev - 1));
-    } else {
-      // If at the beginning, go to the end
-      setCurrentIndex(organizations.length - itemsPerView);
-    }
+    if (originalLength === 0) return;
+    
+    setIsTransitioning(true);
+    setCurrentIndex(prev => prev - 1);
   };
 
   const handleNext = () => {
-    if (canGoRight) {
-      setCurrentIndex(prev => Math.min(organizations.length - itemsPerView, prev + 1));
-    } else {
-      // If at the end, go to the beginning
-      setCurrentIndex(0);
-    }
+    if (originalLength === 0) return;
+    
+    setIsTransitioning(true);
+    setCurrentIndex(prev => prev + 1);
   };
 
   const toggleAutoScroll = () => {
     setIsAutoScrolling(!isAutoScrolling);
   };
 
-  const getColorClass = (color: string) => {
+const getColorClass = (color: string) => {
     const colorMap: { [key: string]: string } = {
-      blue: 'from-blue-600 to-blue-800',
-      green: 'from-green-600 to-green-800',
-      purple: 'from-purple-600 to-purple-800',
-      orange: 'from-orange-600 to-orange-800',
-      red: 'from-red-600 to-red-800',
+      blue: 'white',
+      green: 'white',
+      purple: 'white',
+      orange: 'white',
+      red: 'white',
     };
-    return colorMap[color] || 'from-gray-600 to-gray-800';
-  };
+    return colorMap[color] || 'white';
+};
 
   if (isLoading) {
     return (
@@ -195,7 +213,6 @@ const AppleTVOrganizationsShelf: React.FC = () => {
   }
 
   return (
-    <div className="text-white py-12">
       <div className="max-w-7xl mx-auto px-4">
         {/* Section Header */}
         <div className="flex items-center justify-between mb-8">
@@ -206,7 +223,14 @@ const AppleTVOrganizationsShelf: React.FC = () => {
             <ChevronRight className="w-6 h-6 text-gray-400" />
           </div>
           
-         
+          {/* Auto-scroll toggle */}
+          <button
+            onClick={toggleAutoScroll}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors duration-200"
+          >
+            {isAutoScrolling ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+            <span className="text-sm">{isAutoScrolling ? 'Pause' : 'Play'}</span>
+          </button>
         </div>
 
         {/* Shelf Container */}
@@ -219,7 +243,8 @@ const AppleTVOrganizationsShelf: React.FC = () => {
           {/* Navigation Arrows */}
           <button
             onClick={handlePrevious}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 bg-black/60 hover:bg-black/80 text-white cursor-pointer"
+            disabled={originalLength === 0}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 bg-black/60 hover:bg-black/80 text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ marginLeft: '-24px' }}
           >
             <ChevronLeft className="w-6 h-6" />
@@ -227,26 +252,26 @@ const AppleTVOrganizationsShelf: React.FC = () => {
 
           <button
             onClick={handleNext}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 bg-black/60 hover:bg-black/80 text-white cursor-pointer"
+            disabled={originalLength === 0}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 bg-black/60 hover:bg-black/80 text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ marginRight: '-24px' }}
           >
             <ChevronRight className="w-6 h-6" />
           </button>
 
-         
-
-          {/* Organizations Grid - Single Row Scroll */}
+          {/* Organizations Grid - Infinite Scroll */}
           <div className="overflow-hidden">
             <div 
-              className="flex gap-4 lg:gap-5 transition-transform duration-500 ease-in-out"
+              className={`flex gap-4 lg:gap-5 ${isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
               style={{
                 transform: `translateX(-${currentIndex * (CARD_WIDTH + CARD_GAP)}px)`,
-                width: `${organizations.length * (CARD_WIDTH + CARD_GAP)}px`
+                width: `${extendedOrganizations.length * (CARD_WIDTH + CARD_GAP)}px`
               }}
+              onTransitionEnd={handleTransitionEnd}
             >
-              {organizations.map((org, index) => (
+              {extendedOrganizations.map((org, index) => (
                 <div
-                  key={org.id}
+                  key={`${org.id}-${index}`}
                   className="relative group cursor-pointer flex-shrink-0"
                   style={{ width: `${CARD_WIDTH}px` }}
                   onClick={() => org.website && window.open(org.website, '_blank')}
@@ -310,14 +335,15 @@ const AppleTVOrganizationsShelf: React.FC = () => {
             </div>
           </div>
 
-          {/* Progress indicator */}
+          {/* Progress indicator - shows position within original array */}
           <div className="flex justify-center mt-6 gap-2">
-            {Array.from({ length: Math.ceil(organizations.length / itemsPerView) }).map((_, index) => {
-              const isActive = Math.floor(currentIndex / itemsPerView) === index;
+            {Array.from({ length: originalLength }).map((_, index) => {
+              const adjustedCurrentIndex = ((currentIndex % originalLength) + originalLength) % originalLength;
+              const isActive = adjustedCurrentIndex === index;
               return (
                 <button
                   key={index}
-                  onClick={() => setCurrentIndex(index * itemsPerView)}
+                  onClick={() => setCurrentIndex(startIndex + index)}
                   className={`w-2 h-2 rounded-full transition-all duration-200 ${
                     isActive ? 'bg-white scale-125' : 'bg-gray-600 hover:bg-gray-400'
                   }`}
@@ -327,7 +353,6 @@ const AppleTVOrganizationsShelf: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
   );
 };
 
